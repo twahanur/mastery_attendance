@@ -1,0 +1,201 @@
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
+const logger = createServiceLogger('emailService-service');
+import nodemailer from 'nodemailer';
+import { EmailProvider } from '../types';
+import sgMail from '@sendgrid/mail';
+
+interface EmailOptions {
+  to: string;
+  subject: string;
+  html: string;
+  from?: string;
+}
+
+export class EmailService {
+  private nodemailerTransporter: nodemailer.Transporter;
+  private mailgunClient: any;
+  private emailProvider: EmailProvider;
+  constructor() {
+    this.emailProvider =
+      (process.env.EMAIL_PROVIDER as EmailProvider) || EmailProvider.NODEMAILER;
+
+    // ✅ Initialize Nodemailer
+    this.nodemailerTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "465"),
+      secure: process.env.SMTP_SECURE === "true" || true, // default to true for Gmail
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      debug: true,
+      logger: true,
+      connectionTimeout: 10000, // 10 seconds
+    });
+
+    logger.info(`📧 Email provider set to: ${this.emailProvider}`);
+
+    // ✅ Initialize Mailgun (only if selected)
+    if (this.emailProvider === EmailProvider.MAILGUN) {
+      if (!process.env.MAILGUN_API_KEY) {
+        logger.warn("⚠️ MAILGUN_API_KEY not provided. Mailgun disabled.");
+      } else {
+        const mailgun = new Mailgun(formData);
+        this.mailgunClient = mailgun.client({
+          username: "api",
+          key: process.env.MAILGUN_API_KEY,
+          url: process.env.MAILGUN_URL || "https://api.mailgun.net",
+        });
+        logger.info("📨 Mailgun client initialized");
+      }
+    }
+
+    // ✅ Initialize SendGrid (only if selected)
+    if (this.emailProvider === EmailProvider.SENDGRID) {
+      if (process.env.SENDGRID_API_KEY) {
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+        logger.info("📨 SendGrid client initialized");
+      } else {
+        logger.warn("⚠️ SENDGRID_API_KEY not provided. SendGrid disabled.");
+      }
+    }
+  }
+
+  /**
+   * Send email using the configured provider
+   */
+  async sendEmail(options: EmailOptions): Promise<boolean> {
+    const from =
+      options.from || process.env.EMAIL_FROM || "noreply@example.com";
+
+    try {
+      if (this.emailProvider === EmailProvider.SENDGRID) {
+        const msg = {
+          to: options.to,
+          from,
+          subject: options.subject,
+          html: options.html,
+        };
+        await sgMail.send(msg);
+      } else if (this.emailProvider === EmailProvider.MAILGUN) {
+        await this.mailgunClient.messages.create(process.env.MAILGUN_DOMAIN!, {
+          from,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+        });
+      } else {
+        // Default to Nodemailer
+        await this.nodemailerTransporter.sendMail({
+          from,
+          to: options.to,
+          subject: options.subject,
+          html: options.html,
+        });
+      }
+      return true;
+    } catch (error) {
+      console.log(error);
+      logError(error as Error, {
+        context: `Error sending email via ${this.emailProvider}`,
+      });
+
+      // Fallback strategy: try other providers if the primary fails
+      if (this.emailProvider === EmailProvider.SENDGRID) {
+        try {
+          console.log("SendGrid failed, falling back to Nodemailer...");
+          await this.nodemailerTransporter.sendMail({
+            from,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+          });
+          return true;
+        } catch (fallbackError) {
+          console.log(fallbackError);
+          logError(fallbackError as Error, {
+            context: "Fallback to Nodemailer failed from SendGrid",
+          });
+        }
+      } else if (this.emailProvider === EmailProvider.MAILGUN) {
+        try {
+          console.log("Mailgun failed, falling back to Nodemailer...");
+          await this.nodemailerTransporter.sendMail({
+            from,
+            to: options.to,
+            subject: options.subject,
+            html: options.html,
+          });
+          return true;
+        } catch (fallbackError) {
+          console.log(fallbackError);
+          logError(fallbackError as Error, {
+            context: "Fallback to Nodemailer failed from Mailgun",
+          });
+        }
+      }
+
+      return false;
+    }
+  }
+
+  /**
+   * Send password reset email
+   */
+  async sendPasswordResetEmail(
+    to: string,
+    resetToken: string,
+  ): Promise<boolean> {
+    const resetLink = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    return this.sendEmail({
+      to,
+      subject: "Password Reset Request",
+      html: `
+        <h1>Password Reset Request</h1>
+        <p>You requested to reset your password. Click the link below to reset it:</p>
+        <p><a href="${resetLink}">Reset Password</a></p>
+        <p>This link will expire in 1 hour.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    });
+  }
+
+  /**
+   * Send email verification email
+   */
+  async sendEmailVerificationEmail(
+    to: string,
+    verificationToken: string,
+  ): Promise<boolean> {
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
+
+    return this.sendEmail({
+      to,
+      subject: "Verify Your Email Address",
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333;">Welcome! Please Verify Your Email</h1>
+          <p>Thank you for signing up! To complete your registration, please verify your email address by clicking the link below:</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationLink}" 
+               style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verify Email Address
+            </a>
+          </div>
+          
+          <p>Or copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationLink}</p>
+          
+          <p><strong>This verification link will expire in 24 hours.</strong></p>
+          
+          <p>If you didn't create an account with us, please ignore this email.</p>
+          
+          <p>Best regards,<br>The Team</p>
+        </div>
+      `,
+    });
+  }
+}

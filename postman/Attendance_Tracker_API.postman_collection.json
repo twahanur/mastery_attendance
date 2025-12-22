@@ -1,0 +1,848 @@
+{
+  "info": {
+    "name": "Attendance Tracker API",
+    "description": "Complete Postman collection for the Attendance Tracker API with role-based access control",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeId",
+      "value": "EMP001",
+      "type": "string"
+    },
+    {
+      "key": "attendanceId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        },
+        "description": "Check if the API server is running"
+      },
+      "response": []
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Admin Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('adminToken', responseJson.data.token);",
+                  "    pm.environment.set('authToken', responseJson.data.token);",
+                  "    pm.test('Login successful', () => {",
+                  "        pm.expect(responseJson.success).to.be.true;",
+                  "        pm.expect(responseJson.data.token).to.exist;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/admin/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "admin", "login"]
+            },
+            "description": "Login as admin user"
+          },
+          "response": []
+        },
+        {
+          "name": "Employee Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('employeeToken', responseJson.data.token);",
+                  "    pm.environment.set('authToken', responseJson.data.token);",
+                  "    pm.test('Login successful', () => {",
+                  "        pm.expect(responseJson.success).to.be.true;",
+                  "        pm.expect(responseJson.data.token).to.exist;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"EMP001\",\n  \"password\": \"employee123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/employee/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "employee", "login"]
+            },
+            "description": "Login as employee user"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Get current user profile"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"phoneNumber\": \"+1234567890\",\n  \"address\": \"123 Updated Street\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            },
+            "description": "Update user profile information"
+          },
+          "response": []
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"admin123\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            },
+            "description": "Change user password"
+          },
+          "response": []
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@company.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            },
+            "description": "Request password reset email"
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Reset Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-reset-token-here\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-reset-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-reset-token"]
+            },
+            "description": "Verify if reset token is valid"
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"your-reset-token-here\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            },
+            "description": "Reset password using token"
+          },
+          "response": []
+        },
+        {
+          "name": "Create Employee (Admin Only)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john.doe@company.com\",\n  \"username\": \"john.doe\",\n  \"password\": \"employee123\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"employeeId\": \"EMP001\",\n  \"section\": \"Development\",\n  \"department\": \"IT\",\n  \"designation\": \"Software Engineer\",\n  \"phoneNumber\": \"+1234567890\",\n  \"address\": \"123 Main Street\",\n  \"dateOfJoining\": \"2024-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "employees"]
+            },
+            "description": "Create a new employee (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            },
+            "description": "Logout current user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Employee Management (Admin Only)",
+      "item": [
+        {
+          "name": "Get All Employees",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees?page=1&limit=10&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get list of all employees with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            },
+            "description": "Get specific employee details"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated John\",\n  \"lastName\": \"Updated Doe\",\n  \"section\": \"QA\",\n  \"department\": \"Quality Assurance\",\n  \"designation\": \"Senior QA Engineer\",\n  \"phoneNumber\": \"+9876543210\",\n  \"address\": \"456 Updated Avenue\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            },
+            "description": "Update employee information"
+          },
+          "response": []
+        },
+        {
+          "name": "Deactivate Employee",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}", "deactivate"]
+            },
+            "description": "Deactivate an employee"
+          },
+          "response": []
+        },
+        {
+          "name": "Activate Employee",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}", "activate"]
+            },
+            "description": "Activate an employee"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            },
+            "description": "Delete an employee permanently"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Departments",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "departments"]
+            },
+            "description": "Get all departments"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Sections",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/sections",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sections"]
+            },
+            "description": "Get all sections"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Employee Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{adminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "statistics"]
+            },
+            "description": "Get employee statistics and analytics"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Attendance Management",
+      "item": [
+        {
+          "name": "Mark Attendance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.environment.set('attendanceId', responseJson.data.id);",
+                  "    pm.test('Attendance marked successfully', () => {",
+                  "        pm.expect(responseJson.success).to.be.true;",
+                  "        pm.expect(responseJson.data.id).to.exist;",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2024-12-22\",\n  \"employeeName\": \"John Doe\",\n  \"employeeId\": \"EMP001\",\n  \"section\": \"Development\",\n  \"shift\": \"MORNING\",\n  \"mood\": \"GOOD\",\n  \"checkInTime\": \"09:00\",\n  \"notes\": \"On time arrival\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/mark",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "mark"]
+            },
+            "description": "Mark attendance for today or specific date"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Attendance (Check Out)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkOutTime\": \"18:00\",\n  \"notes\": \"Completed daily tasks\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{attendanceId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{attendanceId}}"]
+            },
+            "description": "Update attendance record (usually for check out)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/my-records?page=1&limit=10&month=2024-12&search=",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "my-records"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "month",
+                  "value": "2024-12"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "Get current user's attendance records"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Month Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/current-month-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "current-month-summary"]
+            },
+            "description": "Get attendance summary for current month"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Month Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/month-summary?month=2024&year=12",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "month-summary"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "2024"
+                },
+                {
+                  "key": "year",
+                  "value": "12"
+                }
+              ]
+            },
+            "description": "Get attendance summary for specific month"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Today's Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "today"]
+            },
+            "description": "Check if attendance is marked for today"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Attendance by Date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/date/2024-12-22",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "date", "2024-12-22"]
+            },
+            "description": "Check attendance for specific date"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Attendance Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "stats"]
+            },
+            "description": "Get personal attendance statistics and analytics"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Attendance by Date",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/date/2024-12-22",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "date", "2024-12-22"]
+            },
+            "description": "Delete attendance record for specific date"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ]
+}

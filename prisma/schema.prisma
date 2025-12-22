@@ -1,0 +1,107 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  EMPLOYEE
+}
+
+enum Shift {
+  MORNING
+  AFTERNOON
+  EVENING
+  NIGHT
+}
+
+enum Mood {
+  EXCELLENT
+  GOOD
+  AVERAGE
+  POOR
+  TERRIBLE
+}
+
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  username    String       @unique
+  password    String
+  role        Role         @default(EMPLOYEE)
+  
+  // Basic Info
+  firstName   String?
+  lastName    String?
+  
+  // Employee specific fields
+  employeeId  String?      @unique
+  section     String?
+  department  String?
+  designation String?
+  phoneNumber String?
+  address     String?
+  dateOfJoining DateTime?
+  isActive    Boolean      @default(true)
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdBy   String?      // Admin who created this user
+  
+  // Relations
+  attendances Attendance[]
+  createdUsers User[]      @relation("UserCreatedBy")
+  creator     User?        @relation("UserCreatedBy", fields: [createdBy], references: [id])
+  passwordResets PasswordReset[]
+
+  @@map("users")
+}
+
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("password_resets")
+}
+
+model Attendance {
+  id         String   @id @default(cuid())
+  userId     String
+  date       DateTime @db.Date
+  
+  // Employee attendance fields
+  employeeName String
+  employeeId   String
+  section      String
+  shift        Shift
+  mood         Mood
+  
+  // Additional fields
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+  notes        String?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Unique constraint to prevent multiple attendance on the same day
+  @@unique([userId, date], name: "user_date_unique")
+  @@map("attendances")
+}
