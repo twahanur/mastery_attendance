@@ -1,0 +1,1287 @@
+{
+  "info": {
+    "name": "Attendance Tracker API - Complete Collection",
+    "description": "Complete Postman collection for the Advanced Attendance Tracker API with unified login, simplified attendance, advanced reporting, and email notifications",
+    "version": "3.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{authToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://masteryattendenceserver-92cqa0muq-twahanurs-projects.vercel.app/api/v1",
+      "type": "string",
+      "description": "Production API base URL"
+    },
+    {
+      "key": "localUrl",
+      "value": "http://localhost:3000/api/v1",
+      "type": "string",
+      "description": "Local development URL"
+    },
+    {
+      "key": "authToken",
+      "value": "",
+      "type": "string",
+      "description": "Current JWT token"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "Admin JWT token"
+    },
+    {
+      "key": "employeeToken",
+      "value": "",
+      "type": "string", 
+      "description": "Employee JWT token"
+    },
+    {
+      "key": "employeeId",
+      "value": "EMP001",
+      "type": "string",
+      "description": "Test employee ID"
+    },
+    {
+      "key": "currentDate",
+      "value": "2024-12-23",
+      "type": "string",
+      "description": "Current date for testing"
+    },
+    {
+      "key": "startDate",
+      "value": "2024-12-01",
+      "type": "string",
+      "description": "Report start date"
+    },
+    {
+      "key": "endDate", 
+      "value": "2024-12-23",
+      "type": "string",
+      "description": "Report end date"
+    },
+    {
+      "key": "year",
+      "value": "2024",
+      "type": "string",
+      "description": "Year for reports"
+    },
+    {
+      "key": "month",
+      "value": "12",
+      "type": "string",
+      "description": "Month for reports"
+    }
+  ],
+  "item": [
+    {
+      "name": "🔧 System Status",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            },
+            "description": "Check API health status and version"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "🔑 Admin Login (Unified)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.token) {",
+                  "        pm.environment.set('adminToken', responseJson.data.token);",
+                  "        pm.environment.set('authToken', responseJson.data.token);",
+                  "        pm.test('Admin login successful', () => {",
+                  "            pm.expect(responseJson.success).to.be.true;",
+                  "            pm.expect(responseJson.data.token).to.exist;",
+                  "            pm.expect(responseJson.data.user.role).to.eql('ADMIN');",
+                  "        });",
+                  "        console.log('Admin token set:', responseJson.data.token.substring(0, 20) + '...');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"admin123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as admin using unified login endpoint"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 Employee Login (Unified)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.success && responseJson.data.token) {",
+                  "        pm.environment.set('employeeToken', responseJson.data.token);",
+                  "        pm.environment.set('authToken', responseJson.data.token);",
+                  "        pm.test('Employee login successful', () => {",
+                  "            pm.expect(responseJson.success).to.be.true;",
+                  "            pm.expect(responseJson.data.token).to.exist;",
+                  "            pm.expect(responseJson.data.user.role).to.eql('EMPLOYEE');",
+                  "        });",
+                  "        console.log('Employee token set:', responseJson.data.token.substring(0, 20) + '...');",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeId}}\",\n  \"password\": \"employee123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as employee using unified login endpoint"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "👥 User Management",
+      "item": [
+        {
+          "name": "📊 Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "dashboard"]
+            },
+            "description": "Get comprehensive dashboard statistics (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "👥 Get All Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees"]
+            },
+            "description": "Get list of all employees (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "🏢 Get Departments with Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "departments"]
+            },
+            "description": "Get departments list with employee counts and lists"
+          },
+          "response": []
+        },
+        {
+          "name": "📋 Get Sections with Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/sections",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sections"]
+            },
+            "description": "Get sections list with employee counts and lists"
+          },
+          "response": []
+        },
+        {
+          "name": "➕ Create Employee",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.test('Employee created successfully', () => {",
+                  "        pm.expect(responseJson.success).to.be.true;",
+                  "        pm.expect(responseJson.data.id).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"employeeId\": \"EMP002\",\n  \"email\": \"john.doe@company.com\",\n  \"section\": \"Development\",\n  \"department\": \"IT\",\n  \"password\": \"employee123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees"]
+            },
+            "description": "Create a new employee (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "🔍 Get Employee by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            },
+            "description": "Get specific employee details (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "✏️ Update Employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"section\": \"Development\",\n  \"department\": \"IT\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            },
+            "description": "Update employee information (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "🗑️ Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/EMP002",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "EMP002"]
+            },
+            "description": "Delete employee (Admin only)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📋 Attendance Management",
+      "item": [
+        {
+          "name": "✅ Mark Attendance (Simplified)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.test('Attendance marked successfully', () => {",
+                  "        pm.expect(responseJson.success).to.be.true;",
+                  "        pm.expect(responseJson.data.id).to.exist;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"{{currentDate}}\",\n  \"mood\": \"HAPPY\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/mark",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "mark"]
+            },
+            "description": "Mark attendance using simplified format (only date and mood required)"
+          },
+          "response": []
+        },
+        {
+          "name": "📝 Update Attendance (Check Out)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkOutTime\": \"17:30\",\n  \"notes\": \"Completed work for the day\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{currentDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{currentDate}}"]
+            },
+            "description": "Update attendance record with check-out time"
+          },
+          "response": []
+        },
+        {
+          "name": "📖 My Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/my-records?limit=10&page=1",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "my-records"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Number of records per page"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number"
+                }
+              ]
+            },
+            "description": "Get my personal attendance records with pagination"
+          },
+          "response": []
+        },
+        {
+          "name": "📅 Get Attendance by Date",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/{{currentDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "{{currentDate}}"]
+            },
+            "description": "Get attendance record for specific date"
+          },
+          "response": []
+        },
+        {
+          "name": "📊 My Attendance Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "stats"]
+            },
+            "description": "Get personal attendance statistics"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Advanced Reports & Analytics",
+      "item": [
+        {
+          "name": "📈 Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "summary"]
+            },
+            "description": "Get quick attendance summary statistics (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "📅 Daily Report - JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/daily?date={{currentDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "daily"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{currentDate}}",
+                  "description": "Date in YYYY-MM-DD format (optional, defaults to today)"
+                }
+              ]
+            },
+            "description": "Get daily attendance report with present/absent lists, late arrivals, and mood distribution"
+          },
+          "response": []
+        },
+        {
+          "name": "📅 Daily Report - PDF Download",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/daily/pdf?date={{currentDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "daily", "pdf"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "{{currentDate}}",
+                  "description": "Date in YYYY-MM-DD format (optional, defaults to today)"
+                }
+              ]
+            },
+            "description": "Download daily attendance report as professionally formatted PDF"
+          },
+          "response": []
+        },
+        {
+          "name": "📊 Weekly Report - JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/weekly?startDate={{startDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "weekly"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Week start date (Monday) in YYYY-MM-DD format"
+                }
+              ]
+            },
+            "description": "Get weekly attendance analysis with trends, perfect attendance, and daily statistics"
+          },
+          "response": []
+        },
+        {
+          "name": "📊 Weekly Report - PDF Download",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/weekly/pdf?startDate={{startDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "weekly", "pdf"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Week start date (Monday) in YYYY-MM-DD format"
+                }
+              ]
+            },
+            "description": "Download weekly attendance report as PDF"
+          },
+          "response": []
+        },
+        {
+          "name": "📈 Monthly Report - JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/monthly?year={{year}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "monthly"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}",
+                  "description": "Year (optional, defaults to current year)"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}",
+                  "description": "Month 1-12 (optional, defaults to current month)"
+                }
+              ]
+            },
+            "description": "Get comprehensive monthly report with employee rankings and department statistics"
+          },
+          "response": []
+        },
+        {
+          "name": "📈 Monthly Report - PDF Download",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/monthly/pdf?year={{year}}&month={{month}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "monthly", "pdf"],
+              "query": [
+                {
+                  "key": "year",
+                  "value": "{{year}}",
+                  "description": "Year (optional, defaults to current year)"
+                },
+                {
+                  "key": "month",
+                  "value": "{{month}}",
+                  "description": "Month 1-12 (optional, defaults to current month)"
+                }
+              ]
+            },
+            "description": "Download monthly attendance report as PDF"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 Employee Report - JSON (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Get detailed employee report with mood analysis and punctuality tracking (Admin access)"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 Employee Report - PDF Download (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}/pdf?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}", "pdf"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Download employee attendance report as PDF (Admin access)"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 My Report - JSON (Employee)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employeeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Get my own attendance report with personal analytics (Employee can only access own data)"
+          },
+          "response": []
+        },
+        {
+          "name": "👤 My Report - PDF Download (Employee)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{employeeToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}/pdf?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}", "pdf"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Download my own attendance report as PDF"
+          },
+          "response": []
+        },
+        {
+          "name": "🏢 Department Comparison - JSON",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/department?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "department"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Get department-wise attendance comparison report (Admin only)"
+          },
+          "response": []
+        },
+        {
+          "name": "🏢 Department Comparison - PDF Download",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/department/pdf?startDate={{startDate}}&endDate={{endDate}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "department", "pdf"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "{{startDate}}",
+                  "description": "Start date in YYYY-MM-DD format (required)"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{endDate}}",
+                  "description": "End date in YYYY-MM-DD format (required)"
+                }
+              ]
+            },
+            "description": "Download department comparison report as PDF"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📧 Email Notification System",
+      "item": [
+        {
+          "name": "📧 Email System Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-status"]
+            },
+            "description": "Check email notification system status (Admin only) - Note: This endpoint may not exist yet"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🧪 Testing & Examples",
+      "item": [
+        {
+          "name": "🎯 Complete Workflow Test",
+          "item": [
+            {
+              "name": "Step 1: Admin Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"admin123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                },
+                "description": "First, login as admin"
+              },
+              "response": []
+            },
+            {
+              "name": "Step 2: Create Test Employee",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Employee\",\n  \"employeeId\": \"EMP999\",\n  \"email\": \"test.employee@company.com\",\n  \"section\": \"Testing\",\n  \"department\": \"QA\",\n  \"password\": \"employee123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/users/employees",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "employees"]
+                },
+                "description": "Create a test employee"
+              },
+              "response": []
+            },
+            {
+              "name": "Step 3: Employee Login",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"employeeId\": \"EMP999\",\n  \"password\": \"employee123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/auth/login",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["auth", "login"]
+                },
+                "description": "Login as the test employee"
+              },
+              "response": []
+            },
+            {
+              "name": "Step 4: Mark Attendance",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{employeeToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"date\": \"{{currentDate}}\",\n  \"mood\": \"HAPPY\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/attendance/mark",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["attendance", "mark"]
+                },
+                "description": "Mark attendance for today"
+              },
+              "response": []
+            },
+            {
+              "name": "Step 5: Generate Daily Report",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reports/daily?date={{currentDate}}",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reports", "daily"],
+                  "query": [
+                    {
+                      "key": "date",
+                      "value": "{{currentDate}}"
+                    }
+                  ]
+                },
+                "description": "Generate daily report to see the attendance"
+              },
+              "response": []
+            },
+            {
+              "name": "Step 6: Cleanup - Delete Test Employee",
+              "request": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/users/employees/EMP999",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["users", "employees", "EMP999"]
+                },
+                "description": "Clean up by deleting the test employee"
+              },
+              "response": []
+            }
+          ]
+        },
+        {
+          "name": "📋 Sample Requests",
+          "item": [
+            {
+              "name": "Mark Attendance - Different Moods",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{employeeToken}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"date\": \"{{currentDate}}\",\n  \"mood\": \"NEUTRAL\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/attendance/mark",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["attendance", "mark"]
+                },
+                "description": "Example with NEUTRAL mood. Available moods: HAPPY, NEUTRAL, TIRED, STRESSED"
+              },
+              "response": []
+            },
+            {
+              "name": "Weekly Report - Last Week",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reports/weekly?startDate=2024-12-16",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reports", "weekly"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2024-12-16",
+                      "description": "Previous week Monday"
+                    }
+                  ]
+                },
+                "description": "Example of getting previous week's report"
+              },
+              "response": []
+            },
+            {
+              "name": "Employee Report - Date Range",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{adminToken}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/reports/employee/{{employeeId}}?startDate=2024-12-01&endDate=2024-12-15",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["reports", "employee", "{{employeeId}}"],
+                  "query": [
+                    {
+                      "key": "startDate",
+                      "value": "2024-12-01"
+                    },
+                    {
+                      "key": "endDate",
+                      "value": "2024-12-15"
+                    }
+                  ]
+                },
+                "description": "Example of custom date range for employee report"
+              },
+              "response": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set current date if not set",
+          "if (!pm.environment.get('currentDate')) {",
+          "    pm.environment.set('currentDate', new Date().toISOString().split('T')[0]);",
+          "}",
+          "",
+          "// Auto-set date ranges if not set", 
+          "if (!pm.environment.get('startDate')) {",
+          "    const start = new Date();",
+          "    start.setDate(1); // First day of month",
+          "    pm.environment.set('startDate', start.toISOString().split('T')[0]);",
+          "}",
+          "",
+          "if (!pm.environment.get('endDate')) {",
+          "    pm.environment.set('endDate', new Date().toISOString().split('T')[0]);",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global response validation",
+          "pm.test('Response time is reasonable', () => {",
+          "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+          "});",
+          "",
+          "pm.test('Response is valid JSON or PDF', () => {",
+          "    const contentType = pm.response.headers.get('Content-Type');",
+          "    if (contentType && contentType.includes('application/pdf')) {",
+          "        pm.expect(pm.response.responseSize).to.be.above(0);",
+          "    } else {",
+          "        pm.expect(() => pm.response.json()).to.not.throw();",
+          "    }",
+          "});",
+          "",
+          "// Log response for debugging",
+          "if (pm.response.code !== 200 && pm.response.code !== 201) {",
+          "    console.log('Response Status:', pm.response.status);",
+          "    console.log('Response Body:', pm.response.text());",
+          "}"
+        ]
+      }
+    }
+  ]
+}

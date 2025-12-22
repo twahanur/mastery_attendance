@@ -7,8 +7,11 @@ const router: Router = Router();
 const authController = new AuthController();
 
 // Public routes
-router.post('/admin/login', authController.adminLogin.bind(authController));
-router.post('/employee/login', authController.employeeLogin.bind(authController));
+router.post("/login", authController.login.bind(authController));
+
+// Legacy routes for backward compatibility
+router.post("/admin/login", authController.login.bind(authController));
+router.post("/employee/login", authController.login.bind(authController));
 
 // Password reset routes (public)
 router.post('/forgot-password', authController.requestPasswordReset.bind(authController));

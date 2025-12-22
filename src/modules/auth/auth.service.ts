@@ -24,24 +24,31 @@ import crypto from 'crypto';
 
 export class AuthService {
   /**
-   * Admin login - can only be done by existing admin
+   * Unified login for both admin and employee users
    */
-  async adminLogin(data: LoginRequest): Promise<AuthResponse> {
+  async login(data: LoginRequest): Promise<AuthResponse> {
     const { email, password } = data;
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email }
+      where: { email },
     });
 
-    if (!user || user.role !== Role.ADMIN) {
-      throw new AuthenticationError('Invalid admin credentials');
+    if (!user) {
+      throw new AuthenticationError("Invalid credentials");
+    }
+
+    // Check if employee account is active
+    if (user.role === Role.EMPLOYEE && !user.isActive) {
+      throw new AuthenticationError(
+        "Account is inactive. Please contact administrator.",
+      );
     }
 
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
-      throw new AuthenticationError('Invalid admin credentials');
+      throw new AuthenticationError("Invalid credentials");
     }
 
     const safeUser: SafeUser = this.createSafeUser(user);
@@ -51,66 +58,63 @@ export class AuthService {
   }
 
   /**
-   * Employee login
+   * Admin login - legacy method (use login instead)
+   * @deprecated Use login method instead
+   */
+  /**
+   * Admin login - legacy method (use login instead)
+   * @deprecated Use login method instead
+   */
+  async adminLogin(data: LoginRequest): Promise<AuthResponse> {
+    return this.login(data);
+  }
+
+  /**
+   * Employee login - legacy method (use login instead)
+   * @deprecated Use login method instead
    */
   async employeeLogin(data: LoginRequest): Promise<AuthResponse> {
-    const { email, password } = data;
-
-    // Find user by email
-    const user = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (!user || user.role !== Role.EMPLOYEE) {
-      throw new AuthenticationError('Invalid employee credentials');
-    }
-
-    if (!user.isActive) {
-      throw new AuthenticationError('Account is inactive. Please contact administrator.');
-    }
-
-    // Verify password
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
-      throw new AuthenticationError('Invalid credentials');
-    }
-
-    const safeUser: SafeUser = this.createSafeUser(user);
-    const token = generateToken(safeUser);
-
-    return { user: safeUser, token };
+    return this.login(data);
   }
 
   /**
    * Create employee (Admin only)
    */
-  async createEmployee(data: CreateEmployeeRequest, adminId: string): Promise<SafeUser> {
-    const { 
-      email, username, password, firstName, lastName, 
-      employeeId, section, department, designation, 
-      phoneNumber, address, dateOfJoining 
+  async createEmployee(
+    data: CreateEmployeeRequest,
+    adminId: string,
+  ): Promise<SafeUser> {
+    const {
+      email,
+      username,
+      password,
+      firstName,
+      lastName,
+      employeeId,
+      section,
+      department,
+      designation,
+      phoneNumber,
+      address,
+      dateOfJoining,
     } = data;
 
     // Check if user already exists with email, username, or employeeId
     const existingUser = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email },
-          { username },
-          { employeeId }
-        ]
-      }
+        OR: [{ email }, { username }, { employeeId }],
+      },
     });
 
     if (existingUser) {
       if (existingUser.email === email) {
-        throw new ConflictError('Email already registered');
+        throw new ConflictError("Email already registered");
       }
       if (existingUser.username === username) {
-        throw new ConflictError('Username already taken');
+        throw new ConflictError("Username already taken");
       }
       if (existingUser.employeeId === employeeId) {
-        throw new ConflictError('Employee ID already exists');
+        throw new ConflictError("Employee ID already exists");
       }
     }
 
@@ -119,7 +123,9 @@ export class AuthService {
     if (dateOfJoining) {
       const dateValidation = validateAndParseDate(dateOfJoining);
       if (!dateValidation.isValidDate || !dateValidation.parsedDate) {
-        throw new ValidationError('Invalid date of joining format. Please use YYYY-MM-DD');
+        throw new ValidationError(
+          "Invalid date of joining format. Please use YYYY-MM-DD",
+        );
       }
       joiningDate = dateValidation.parsedDate;
     }
@@ -143,7 +149,7 @@ export class AuthService {
         phoneNumber: phoneNumber || null,
         address: address || null,
         dateOfJoining: joiningDate || null,
-        createdBy: adminId
+        createdBy: adminId,
       },
       select: {
         id: true,
@@ -162,8 +168,8 @@ export class AuthService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true
-      }
+        createdBy: true,
+      },
     });
 
     return user;
@@ -192,12 +198,12 @@ export class AuthService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true
-      }
+        createdBy: true,
+      },
     });
 
     if (!user) {
-      throw new NotFoundError('User not found');
+      throw new NotFoundError("User not found");
     }
 
     return user;
@@ -206,7 +212,10 @@ export class AuthService {
   /**
    * Update user profile
    */
-  async updateProfile(userId: string, data: Partial<Pick<CreateEmployeeRequest, 'firstName' | 'lastName'>>): Promise<SafeUser> {
+  async updateProfile(
+    userId: string,
+    data: Partial<Pick<CreateEmployeeRequest, "firstName" | "lastName">>,
+  ): Promise<SafeUser> {
     const user = await prisma.user.update({
       where: { id: userId },
       data,
@@ -227,8 +236,8 @@ export class AuthService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true
-      }
+        createdBy: true,
+      },
     });
 
     return user;
@@ -237,7 +246,10 @@ export class AuthService {
   /**
    * Update employee details (Admin only)
    */
-  async updateEmployee(employeeId: string, data: UpdateEmployeeRequest): Promise<SafeUser> {
+  async updateEmployee(
+    employeeId: string,
+    data: UpdateEmployeeRequest,
+  ): Promise<SafeUser> {
     const user = await prisma.user.update({
       where: { id: employeeId },
       data,
@@ -258,8 +270,8 @@ export class AuthService {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        createdBy: true
-      }
+        createdBy: true,
+      },
     });
 
     return user;
@@ -271,7 +283,7 @@ export class AuthService {
   async deactivateEmployee(employeeId: string): Promise<void> {
     await prisma.user.update({
       where: { id: employeeId },
-      data: { isActive: false }
+      data: { isActive: false },
     });
   }
 
@@ -281,45 +293,53 @@ export class AuthService {
   async activateEmployee(employeeId: string): Promise<void> {
     await prisma.user.update({
       where: { id: employeeId },
-      data: { isActive: true }
+      data: { isActive: true },
     });
   }
 
   /**
    * Request password reset
    */
-  async requestPasswordReset(data: PasswordResetRequest): Promise<PasswordResetResponse> {
+  async requestPasswordReset(
+    data: PasswordResetRequest,
+  ): Promise<PasswordResetResponse> {
     const { email } = data;
 
     // Find user by email
     const user = await prisma.user.findUnique({
-      where: { email, isActive: true }
+      where: { email, isActive: true },
     });
 
     if (!user) {
       // For security, don't reveal if email exists
       return {
-        message: 'If this email exists in our system, you will receive password reset instructions.'
+        message:
+          "If this email exists in our system, you will receive password reset instructions.",
       };
     }
 
     // Invalidate any existing password reset tokens for this user
     await prisma.passwordReset.updateMany({
-      where: { 
+      where: {
         userId: user.id,
         used: false,
-        expiresAt: { gt: new Date() }
+        expiresAt: { gt: new Date() },
       },
-      data: { used: true }
+      data: { used: true },
     });
 
     // Generate secure reset token
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
-    
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
     // Set expiration time (1 hour from now)
     const expiresAt = new Date();
-    const expiresInMinutes = parseInt(process.env.PASSWORD_RESET_EXPIRES_IN?.replace('h', '') || '1') * 60;
+    const expiresInMinutes =
+      parseInt(process.env.PASSWORD_RESET_EXPIRES_IN?.replace("h", "") || "1") *
+      60;
     expiresAt.setMinutes(expiresAt.getMinutes() + expiresInMinutes);
 
     // Save reset token to database
@@ -328,88 +348,99 @@ export class AuthService {
         userId: user.id,
         token: hashedToken,
         expiresAt,
-        used: false
-      }
+        used: false,
+      },
     });
 
     // Generate reset link
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
     const resetLink = `${frontendUrl}/reset-password?token=${resetToken}`;
 
     // Send password reset email
     const emailSent = await emailService.sendPasswordResetEmail(user.email, {
-      userName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username,
+      userName:
+        `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+        user.username,
       resetLink,
-      expiresIn: process.env.PASSWORD_RESET_EXPIRES_IN || '1 hour'
+      expiresIn: process.env.PASSWORD_RESET_EXPIRES_IN || "1 hour",
     });
 
     if (!emailSent) {
-      throw new Error('Failed to send password reset email. Please try again later.');
+      throw new Error(
+        "Failed to send password reset email. Please try again later.",
+      );
     }
 
     return {
-      message: 'If this email exists in our system, you will receive password reset instructions.',
-      expiresAt
+      message:
+        "If this email exists in our system, you will receive password reset instructions.",
+      expiresAt,
     };
   }
 
   /**
    * Verify password reset token
    */
-  async verifyResetToken(data: VerifyResetTokenRequest): Promise<{ valid: boolean; message: string }> {
+  async verifyResetToken(
+    data: VerifyResetTokenRequest,
+  ): Promise<{ valid: boolean; message: string }> {
     const { token } = data;
 
     // Hash the provided token
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     // Find valid reset token
     const resetRecord = await prisma.passwordReset.findFirst({
       where: {
         token: hashedToken,
         used: false,
-        expiresAt: { gt: new Date() }
+        expiresAt: { gt: new Date() },
       },
-      include: { user: true }
+      include: { user: true },
     });
 
     if (!resetRecord) {
       return {
         valid: false,
-        message: 'Invalid or expired reset token.'
+        message: "Invalid or expired reset token.",
       };
     }
 
     return {
       valid: true,
-      message: 'Reset token is valid.'
+      message: "Reset token is valid.",
     };
   }
 
   /**
    * Reset password using token
    */
-  async resetPassword(data: ResetPasswordRequest): Promise<{ message: string }> {
+  async resetPassword(
+    data: ResetPasswordRequest,
+  ): Promise<{ message: string }> {
     const { token, newPassword } = data;
 
     // Hash the provided token
-    const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     // Find valid reset token
     const resetRecord = await prisma.passwordReset.findFirst({
       where: {
         token: hashedToken,
         used: false,
-        expiresAt: { gt: new Date() }
+        expiresAt: { gt: new Date() },
       },
-      include: { user: true }
+      include: { user: true },
     });
 
     if (!resetRecord) {
-      throw new ValidationError('Invalid or expired reset token.');
+      throw new ValidationError("Invalid or expired reset token.");
     }
 
     if (!resetRecord.user.isActive) {
-      throw new ValidationError('This account is deactivated. Please contact your administrator.');
+      throw new ValidationError(
+        "This account is deactivated. Please contact your administrator.",
+      );
     }
 
     // Hash new password
@@ -419,44 +450,53 @@ export class AuthService {
     await prisma.$transaction([
       prisma.user.update({
         where: { id: resetRecord.userId },
-        data: { password: hashedPassword }
+        data: { password: hashedPassword },
       }),
       prisma.passwordReset.update({
         where: { id: resetRecord.id },
-        data: { used: true }
-      })
+        data: { used: true },
+      }),
     ]);
 
     return {
-      message: 'Password has been reset successfully. You can now login with your new password.'
+      message:
+        "Password has been reset successfully. You can now login with your new password.",
     };
   }
 
   /**
    * Change password (for authenticated users)
    */
-  async changePassword(userId: string, data: ChangePasswordRequest): Promise<{ message: string }> {
+  async changePassword(
+    userId: string,
+    data: ChangePasswordRequest,
+  ): Promise<{ message: string }> {
     const { currentPassword, newPassword } = data;
 
     // Find user
     const user = await prisma.user.findUnique({
-      where: { id: userId }
+      where: { id: userId },
     });
 
     if (!user) {
-      throw new NotFoundError('User not found.');
+      throw new NotFoundError("User not found.");
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await comparePassword(currentPassword, user.password);
+    const isCurrentPasswordValid = await comparePassword(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
-      throw new AuthenticationError('Current password is incorrect.');
+      throw new AuthenticationError("Current password is incorrect.");
     }
 
     // Check if new password is different from current
     const isSamePassword = await comparePassword(newPassword, user.password);
     if (isSamePassword) {
-      throw new ValidationError('New password must be different from current password.');
+      throw new ValidationError(
+        "New password must be different from current password.",
+      );
     }
 
     // Hash new password
@@ -465,11 +505,11 @@ export class AuthService {
     // Update password
     await prisma.user.update({
       where: { id: userId },
-      data: { password: hashedPassword }
+      data: { password: hashedPassword },
     });
 
     return {
-      message: 'Password changed successfully.'
+      message: "Password changed successfully.",
     };
   }
 

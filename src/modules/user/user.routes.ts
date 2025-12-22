@@ -19,6 +19,7 @@ router.post('/employees/:employeeId/activate', userController.activateEmployee.b
 router.delete('/employees/:employeeId', userController.deleteEmployee.bind(userController));
 
 // Data endpoints
+router.get("/dashboard", userController.getDashboardStats.bind(userController));
 router.get('/departments', userController.getDepartments.bind(userController));
 router.get('/sections', userController.getSections.bind(userController));
 router.get('/statistics', userController.getEmployeeStats.bind(userController));

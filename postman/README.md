@@ -1,53 +1,120 @@
-# Postman Collection for Attendance Tracker API
+# Attendance Tracker API - Complete Postman Collection
 
-This directory contains Postman collection and environment files for testing the Attendance Tracker API.
+This directory contains a comprehensive Postman collection for the Advanced Attendance Tracker API, including all recent features and improvements.
 
-## Files
+## 📋 Collection Contents
 
-- `Attendance_Tracker_API.postman_collection.json` - Main collection with all API endpoints
-- `Attendance_Tracker_Local.postman_environment.json` - Environment variables for local development
+### 🗂️ Main Collection
+**File**: `Attendance_Tracker_Complete.postman_collection.json`
 
-## Setup Instructions
+The collection is organized into the following categories:
 
-### 1. Import Collection and Environment
+#### 🔧 System Status
+- **Health Check** - Verify API status and connectivity
 
+#### 🔐 Authentication  
+- **Admin Login (Unified)** - Login as administrator using unified endpoint
+- **Employee Login (Unified)** - Login as employee using unified endpoint
+
+#### 👥 User Management
+- **Dashboard Statistics** - Get comprehensive dashboard stats (Admin only)
+- **Get All Employees** - List all employees (Admin only)
+- **Get Departments with Employees** - Department breakdown with employee lists
+- **Get Sections with Employees** - Section breakdown with employee lists  
+- **Create Employee** - Add new employee (Admin only)
+- **Get Employee by ID** - Retrieve specific employee details
+- **Update Employee** - Modify employee information
+- **Delete Employee** - Remove employee from system
+
+#### 📋 Attendance Management
+- **Mark Attendance (Simplified)** - Mark attendance with simplified format (date + mood only)
+- **Update Attendance (Check Out)** - Add check-out time and notes
+- **My Attendance Records** - Get personal attendance history with pagination
+- **Get Attendance by Date** - Retrieve attendance for specific date
+- **My Attendance Stats** - Personal attendance statistics
+
+#### 📊 Advanced Reports & Analytics
+- **Attendance Summary** - Quick overview statistics
+- **Daily Report** - JSON and PDF formats for daily attendance
+- **Weekly Report** - JSON and PDF formats for weekly analysis  
+- **Monthly Report** - JSON and PDF formats for monthly insights
+- **Employee Report** - Individual employee analysis (Admin and Employee access)
+- **Department Comparison** - Department-wise attendance comparison
+
+#### 📧 Email Notification System
+- **Email System Status** - Check notification system status
+
+#### 🧪 Testing & Examples
+- **Complete Workflow Test** - Step-by-step testing scenario
+- **Sample Requests** - Example requests with different parameters
+
+## 🌍 Environment Files
+
+### Production Environment
+**File**: `Attendance_Tracker_Production.postman_environment.json`
+- **Base URL**: `https://masteryattendenceserver-92cqa0muq-twahanurs-projects.vercel.app/api/v1`
+- Pre-configured for production testing
+
+### Local Development Environment  
+**File**: `Attendance_Tracker_Local.postman_environment.json`
+- **Base URL**: `http://localhost:3000/api/v1`
+- Pre-configured for local development
+
+## 🚀 Quick Start Guide
+
+### 1. Import Collection & Environment
 1. Open Postman
-2. Click **Import** button
-3. Import both files:
-   - `Attendance_Tracker_API.postman_collection.json`
+2. Click **Import** → **Files**
+3. Select all three files:
+   - `Attendance_Tracker_Complete.postman_collection.json`
+   - `Attendance_Tracker_Production.postman_environment.json` 
    - `Attendance_Tracker_Local.postman_environment.json`
 
 ### 2. Select Environment
+- For production testing: Select **"Attendance Tracker - Production Environment"**
+- For local development: Select **"Attendance Tracker - Local Development"**
 
-1. In Postman, click the environment dropdown (top right)
-2. Select **"Attendance Tracker - Local"**
+### 3. Authentication Flow
+1. **Admin Login**: Use "🔑 Admin Login (Unified)" request
+   - Email: `admin@company.com`
+   - Password: `admin123`
+   - Token automatically saved to `adminToken` variable
 
-### 3. Start the API Server
+2. **Employee Login**: Use "👤 Employee Login (Unified)" request  
+   - Employee ID: `EMP001`
+   - Password: `employee123`
+   - Token automatically saved to `employeeToken` variable
 
-Make sure your attendance tracker API is running:
+### 4. Test Complete Workflow
+Navigate to **🧪 Testing & Examples** → **🎯 Complete Workflow Test** and run requests sequentially:
+1. Step 1: Admin Login
+2. Step 2: Create Test Employee
+3. Step 3: Employee Login
+4. Step 4: Mark Attendance
+5. Step 5: Generate Daily Report
+6. Step 6: Cleanup - Delete Test Employee
 
-```bash
-cd /path/to/attendance-tracker
-npm run dev
-```
+## 🔍 Key Features
 
-The server should be running on `http://localhost:3000`
+### ✨ Automated Features
+- **Token Management**: Authentication tokens automatically captured and used
+- **Date Variables**: Current date and date ranges auto-populated
+- **Response Validation**: Automatic JSON/PDF response validation
+- **Error Logging**: Failed requests logged with details
 
-## Testing Workflow
+### 📊 Report Formats
+- **JSON Reports**: Structured data for integration
+- **PDF Reports**: Professional formatted documents for sharing
+- **Date Ranges**: Flexible date range queries for all reports
 
-### Step 1: Health Check
-- Run **Health Check** to verify the API is running
+### 🔒 Role-Based Access
+- **Admin Access**: Full system access including all reports and user management
+- **Employee Access**: Personal data access with own attendance reports
 
-### Step 2: Authentication Setup
-
-**Create Admin User (if not exists):**
-You need to create an admin user first. You can do this by running the database seeding script or manually inserting into the database.
-
-**For Testing, Create Sample Data:**
-
-1. **Admin Login:**
-   - Use **Authentication > Admin Login**
-   - Default credentials: `admin@company.com` / `admin123`
+### 🎯 Simplified Attendance
+- **Minimal Input**: Only date and mood required for attendance marking
+- **Automatic Times**: Check-in time auto-recorded
+- **Mood Tracking**: HAPPY, NEUTRAL, TIRED, STRESSED mood options
    - This will automatically set the `adminToken` environment variable
 
 2. **Create Employee:**

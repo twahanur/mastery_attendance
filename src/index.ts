@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import routes from './routes';
 import { errorHandler, requestLogger, createRateLimiter } from './shared/middleware/errorHandler';
 import { prisma } from './shared/config/database';
+import { ScheduleManager } from "./shared/services/scheduleManager";
 
 // Load environment variables
 dotenv.config();
@@ -128,13 +129,18 @@ async function startServer() {
   try {
     // Connect to database
     await connectDatabase();
-    
+
+    // Initialize schedule manager for automated email notifications
+    const scheduleManager = ScheduleManager.getInstance();
+    scheduleManager.startSchedules();
+    console.log("📧 Email notification scheduler initialized");
+
     // Start listening
     const server = app.listen(PORT, () => {
       console.log(`
 🚀 Attendance Tracker API v2.0 is running!
 📍 Port: ${PORT}
-🌍 Environment: ${process.env.NODE_ENV || 'development'}
+🌍 Environment: ${process.env.NODE_ENV || "development"}
 📝 API Documentation: http://localhost:${PORT}/api/v1/health
 🎯 Base URL: http://localhost:${PORT}/api/v1
 
@@ -149,25 +155,33 @@ async function startServer() {
    Mark Attendance: http://localhost:${PORT}/api/v1/attendance/mark
    My Records: http://localhost:${PORT}/api/v1/attendance/my-records
 
+📊 Reports & Analytics (Admin only):
+   Daily Reports: http://localhost:${PORT}/api/v1/reports/daily
+   Weekly Reports: http://localhost:${PORT}/api/v1/reports/weekly
+   Monthly Reports: http://localhost:${PORT}/api/v1/reports/monthly
+   Employee Reports: http://localhost:${PORT}/api/v1/reports/employee/:employeeId
+   Department Reports: http://localhost:${PORT}/api/v1/reports/department
+
 🔍 Features:
    ✅ Role-based access control (Admin/Employee)
    ✅ Employee management system
    ✅ Enhanced attendance tracking with mood & shift
    ✅ Comprehensive analytics & reporting
+   ✅ Automated email notifications (1PM daily reminders)
+   ✅ PDF report generation
    ✅ Secure JWT authentication
       `);
     });
 
     // Handle server errors
-    server.on('error', (error: any) => {
-      if (error.code === 'EADDRINUSE') {
+    server.on("error", (error: any) => {
+      if (error.code === "EADDRINUSE") {
         console.error(`❌ Port ${PORT} is already in use`);
       } else {
-        console.error('❌ Server error:', error);
+        console.error("❌ Server error:", error);
       }
       process.exit(1);
     });
-    
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     process.exit(1);

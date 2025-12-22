@@ -22,7 +22,8 @@ export class AttendanceController {
   }
 
   /**
-   * Mark attendance for the current user
+   * Mark attendance for the current user (simplified version)
+   * Only requires mood and optional date - other fields calculated from user profile
    */
   async markAttendance(req: Request, res: Response): Promise<void> {
     try {
@@ -31,16 +32,21 @@ export class AttendanceController {
       // Validate request body
       const { error, value } = markAttendanceSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const attendanceData: MarkAttendanceRequest = value;
-      const attendance = await this.attendanceService.markAttendance(userId, attendanceData);
+      const attendance = await this.attendanceService.markAttendance(
+        userId,
+        attendanceData,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Attendance marked successfully',
-        data: { attendance }
+        message: "Attendance marked successfully",
+        data: { attendance },
       };
 
       res.status(201).json(response);
@@ -48,8 +54,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to mark attendance',
-        error: error.message
+        message: error.message || "Failed to mark attendance",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -65,27 +71,29 @@ export class AttendanceController {
       const { attendanceId } = req.params;
 
       if (!attendanceId) {
-        throw new ValidationError('Attendance ID is required');
+        throw new ValidationError("Attendance ID is required");
       }
 
       // Validate request body
       const { error, value } = updateAttendanceSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const { checkOutTime, notes } = value;
       const attendance = await this.attendanceService.updateAttendance(
-        userId, 
-        attendanceId, 
-        checkOutTime, 
-        notes
+        userId,
+        attendanceId,
+        checkOutTime,
+        notes,
       );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Attendance updated successfully',
-        data: { attendance }
+        message: "Attendance updated successfully",
+        data: { attendance },
       };
 
       res.status(200).json(response);
@@ -93,8 +101,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to update attendance',
-        error: error.message
+        message: error.message || "Failed to update attendance",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -111,29 +119,31 @@ export class AttendanceController {
       // Validate query parameters
       const { error, value } = attendanceFilterSchema.validate(req.query);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const { page, limit, startDate, endDate, section, shift, mood } = value;
       const result = await this.attendanceService.getUserAttendanceRecords(
-        userId, 
-        page, 
-        limit, 
-        { startDate, endDate, section, shift, mood }
+        userId,
+        page,
+        limit,
+        { startDate, endDate, section, shift, mood },
       );
 
       const totalPages = Math.ceil(result.totalCount / limit);
 
       const response: PaginatedResponse<typeof result> = {
         success: true,
-        message: 'Attendance records retrieved successfully',
+        message: "Attendance records retrieved successfully",
         data: result,
         pagination: {
           page,
           limit,
           total: result.totalCount,
-          totalPages
-        }
+          totalPages,
+        },
       };
 
       res.status(200).json(response);
@@ -141,8 +151,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get attendance records',
-        error: error.message
+        message: error.message || "Failed to get attendance records",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -155,12 +165,14 @@ export class AttendanceController {
   async getCurrentMonthSummary(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const summary = await this.attendanceService.getCurrentMonthSummary(userId);
+      const summary = await this.attendanceService.getCurrentMonthSummary(
+        userId,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Current month attendance summary retrieved successfully',
-        data: { summary }
+        message: "Current month attendance summary retrieved successfully",
+        data: { summary },
       };
 
       res.status(200).json(response);
@@ -168,8 +180,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get current month summary',
-        error: error.message
+        message: error.message || "Failed to get current month summary",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -186,7 +198,9 @@ export class AttendanceController {
       // Validate month and year parameters
       const { error, value } = monthYearSchema.validate(req.query);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const { month, year } = value;
@@ -196,12 +210,16 @@ export class AttendanceController {
       const targetMonth = month || currentDate.getMonth() + 1;
       const targetYear = year || currentDate.getFullYear();
 
-      const summary = await this.attendanceService.getMonthSummary(userId, targetYear, targetMonth);
+      const summary = await this.attendanceService.getMonthSummary(
+        userId,
+        targetYear,
+        targetMonth,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Monthly attendance summary retrieved successfully',
-        data: { summary }
+        message: "Monthly attendance summary retrieved successfully",
+        data: { summary },
       };
 
       res.status(200).json(response);
@@ -209,8 +227,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get monthly summary',
-        error: error.message
+        message: error.message || "Failed to get monthly summary",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -223,15 +241,17 @@ export class AttendanceController {
   async checkTodayAttendance(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const isMarked = await this.attendanceService.isTodayAttendanceMarked(userId);
+      const isMarked = await this.attendanceService.isTodayAttendanceMarked(
+        userId,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Today attendance status retrieved successfully',
-        data: { 
+        message: "Today attendance status retrieved successfully",
+        data: {
           isMarked,
-          date: new Date().toISOString().split('T')[0] // YYYY-MM-DD format
-        }
+          date: new Date().toISOString().split("T")[0], // YYYY-MM-DD format
+        },
       };
 
       res.status(200).json(response);
@@ -239,8 +259,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to check today attendance',
-        error: error.message
+        message: error.message || "Failed to check today attendance",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -256,20 +276,23 @@ export class AttendanceController {
       const { date } = req.params;
 
       if (!date) {
-        throw new ValidationError('Date parameter is required');
+        throw new ValidationError("Date parameter is required");
       }
 
-      const attendance = await this.attendanceService.getDateAttendance(userId, date);
+      const attendance = await this.attendanceService.getDateAttendance(
+        userId,
+        date,
+      );
       const isMarked = attendance !== null;
 
       const response: ApiResponse = {
         success: true,
-        message: 'Date attendance status retrieved successfully',
-        data: { 
+        message: "Date attendance status retrieved successfully",
+        data: {
           isMarked,
           date,
-          attendance
-        }
+          attendance,
+        },
       };
 
       res.status(200).json(response);
@@ -277,8 +300,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to check date attendance',
-        error: error.message
+        message: error.message || "Failed to check date attendance",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -295,8 +318,8 @@ export class AttendanceController {
 
       const response: ApiResponse = {
         success: true,
-        message: 'Attendance statistics retrieved successfully',
-        data: { stats }
+        message: "Attendance statistics retrieved successfully",
+        data: { stats },
       };
 
       res.status(200).json(response);
@@ -304,8 +327,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get attendance statistics',
-        error: error.message
+        message: error.message || "Failed to get attendance statistics",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -321,14 +344,14 @@ export class AttendanceController {
       const { date } = req.params;
 
       if (!date) {
-        throw new ValidationError('Date parameter is required');
+        throw new ValidationError("Date parameter is required");
       }
 
       await this.attendanceService.deleteAttendance(userId, date);
 
       const response: ApiResponse = {
         success: true,
-        message: `Attendance for ${date} deleted successfully`
+        message: `Attendance for ${date} deleted successfully`,
       };
 
       res.status(200).json(response);
@@ -336,8 +359,8 @@ export class AttendanceController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to delete attendance',
-        error: error.message
+        message: error.message || "Failed to delete attendance",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);

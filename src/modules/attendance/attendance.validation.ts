@@ -3,39 +3,71 @@ import { Shift, Mood } from '../../types';
 
 // Attendance validation schemas
 export const markAttendanceSchema = Joi.object({
-  date: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional().messages({
-    'string.pattern.base': 'Date must be in YYYY-MM-DD format'
+  date: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "Date must be in YYYY-MM-DD format",
+    }),
+  mood: Joi.string()
+    .valid(...Object.values(Mood))
+    .required()
+    .messages({
+      "any.only": `Mood must be one of: ${Object.values(Mood).join(", ")}`,
+      "any.required": "Mood is required",
+    }),
+  notes: Joi.string().max(500).optional().messages({
+    "string.max": "Notes cannot exceed 500 characters",
   }),
+});
+
+// Legacy schema for backward compatibility (if needed)
+export const markAttendanceSchemaLegacy = Joi.object({
+  date: Joi.string()
+    .pattern(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "Date must be in YYYY-MM-DD format",
+    }),
   employeeName: Joi.string().min(2).max(100).required().messages({
-    'string.min': 'Employee name must be at least 2 characters long',
-    'string.max': 'Employee name cannot exceed 100 characters',
-    'any.required': 'Employee name is required'
+    "string.min": "Employee name must be at least 2 characters long",
+    "string.max": "Employee name cannot exceed 100 characters",
+    "any.required": "Employee name is required",
   }),
   employeeId: Joi.string().alphanum().min(3).max(20).required().messages({
-    'string.alphanum': 'Employee ID can only contain letters and numbers',
-    'string.min': 'Employee ID must be at least 3 characters long',
-    'string.max': 'Employee ID cannot exceed 20 characters',
-    'any.required': 'Employee ID is required'
+    "string.alphanum": "Employee ID can only contain letters and numbers",
+    "string.min": "Employee ID must be at least 3 characters long",
+    "string.max": "Employee ID cannot exceed 20 characters",
+    "any.required": "Employee ID is required",
   }),
   section: Joi.string().min(2).max(50).required().messages({
-    'string.min': 'Section must be at least 2 characters long',
-    'string.max': 'Section cannot exceed 50 characters',
-    'any.required': 'Section is required'
+    "string.min": "Section must be at least 2 characters long",
+    "string.max": "Section cannot exceed 50 characters",
+    "any.required": "Section is required",
   }),
-  shift: Joi.string().valid(...Object.values(Shift)).required().messages({
-    'any.only': `Shift must be one of: ${Object.values(Shift).join(', ')}`,
-    'any.required': 'Shift is required'
-  }),
-  mood: Joi.string().valid(...Object.values(Mood)).required().messages({
-    'any.only': `Mood must be one of: ${Object.values(Mood).join(', ')}`,
-    'any.required': 'Mood is required'
-  }),
-  checkInTime: Joi.string().pattern(/^\d{2}:\d{2}$/).optional().messages({
-    'string.pattern.base': 'Check-in time must be in HH:MM format'
-  }),
+  shift: Joi.string()
+    .valid(...Object.values(Shift))
+    .required()
+    .messages({
+      "any.only": `Shift must be one of: ${Object.values(Shift).join(", ")}`,
+      "any.required": "Shift is required",
+    }),
+  mood: Joi.string()
+    .valid(...Object.values(Mood))
+    .required()
+    .messages({
+      "any.only": `Mood must be one of: ${Object.values(Mood).join(", ")}`,
+      "any.required": "Mood is required",
+    }),
+  checkInTime: Joi.string()
+    .pattern(/^\d{2}:\d{2}$/)
+    .optional()
+    .messages({
+      "string.pattern.base": "Check-in time must be in HH:MM format",
+    }),
   notes: Joi.string().max(500).optional().messages({
-    'string.max': 'Notes cannot exceed 500 characters'
-  })
+    "string.max": "Notes cannot exceed 500 characters",
+  }),
 });
 
 export const updateAttendanceSchema = Joi.object({

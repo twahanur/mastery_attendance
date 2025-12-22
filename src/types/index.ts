@@ -71,6 +71,13 @@ export interface ChangePasswordRequest {
 // Attendance related types
 export interface MarkAttendanceRequest {
   date?: string; // Optional, defaults to today in YYYY-MM-DD format
+  mood: Mood;
+  notes?: string;
+}
+
+// Legacy interface for backward compatibility
+export interface MarkAttendanceRequestLegacy {
+  date?: string; // Optional, defaults to today in YYYY-MM-DD format
   employeeName: string;
   employeeId: string;
   section: string;
@@ -128,6 +135,27 @@ export interface UpdateEmployeeRequest {
 export interface EmployeeListResponse {
   employees: SafeUser[];
   totalCount: number;
+}
+
+export interface DepartmentWithEmployees {
+  name: string;
+  employees: SafeUser[];
+  employeeCount: number;
+}
+
+export interface SectionWithEmployees {
+  name: string;
+  employees: SafeUser[];
+  employeeCount: number;
+}
+
+export interface DashboardStats {
+  totalEmployees: number;
+  totalAttendedToday: number;
+  totalNotAttendedToday: number;
+  attendancePercentageToday: number;
+  notAttendedEmployees: SafeUser[];
+  recentAttendances: AttendanceResponse[];
 }
 
 // API Response types

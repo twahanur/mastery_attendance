@@ -22,7 +22,9 @@ export class UserController {
     try {
       const { error, value } = getUsersQuerySchema.validate(req.query);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const { page, limit } = value;
@@ -32,14 +34,14 @@ export class UserController {
 
       const response: PaginatedResponse<typeof result> = {
         success: true,
-        message: 'Employees retrieved successfully',
+        message: "Employees retrieved successfully",
         data: result,
         pagination: {
           page,
           limit,
           total: result.totalCount,
-          totalPages
-        }
+          totalPages,
+        },
       };
 
       res.status(200).json(response);
@@ -47,8 +49,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get employees',
-        error: error.message
+        message: error.message || "Failed to get employees",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -63,15 +65,15 @@ export class UserController {
       const { employeeId } = req.params;
 
       if (!employeeId) {
-        throw new ValidationError('Employee ID is required');
+        throw new ValidationError("Employee ID is required");
       }
 
       const employee = await this.userService.getEmployeeById(employeeId);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee retrieved successfully',
-        data: { employee }
+        message: "Employee retrieved successfully",
+        data: { employee },
       };
 
       res.status(200).json(response);
@@ -79,8 +81,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get employee',
-        error: error.message
+        message: error.message || "Failed to get employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -93,23 +95,28 @@ export class UserController {
   async updateEmployee(req: Request, res: Response): Promise<void> {
     try {
       const { employeeId } = req.params;
-      
+
       if (!employeeId) {
-        throw new ValidationError('Employee ID is required');
+        throw new ValidationError("Employee ID is required");
       }
 
       const { error, value } = updateEmployeeSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const updateData: UpdateEmployeeRequest = value;
-      const employee = await this.userService.updateEmployee(employeeId, updateData);
+      const employee = await this.userService.updateEmployee(
+        employeeId,
+        updateData,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee updated successfully',
-        data: { employee }
+        message: "Employee updated successfully",
+        data: { employee },
       };
 
       res.status(200).json(response);
@@ -117,8 +124,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to update employee',
-        error: error.message
+        message: error.message || "Failed to update employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -133,15 +140,15 @@ export class UserController {
       const { employeeId } = req.params;
 
       if (!employeeId) {
-        throw new ValidationError('Employee ID is required');
+        throw new ValidationError("Employee ID is required");
       }
 
       const employee = await this.userService.deactivateEmployee(employeeId);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee deactivated successfully',
-        data: { employee }
+        message: "Employee deactivated successfully",
+        data: { employee },
       };
 
       res.status(200).json(response);
@@ -149,8 +156,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to deactivate employee',
-        error: error.message
+        message: error.message || "Failed to deactivate employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -165,15 +172,15 @@ export class UserController {
       const { employeeId } = req.params;
 
       if (!employeeId) {
-        throw new ValidationError('Employee ID is required');
+        throw new ValidationError("Employee ID is required");
       }
 
       const employee = await this.userService.activateEmployee(employeeId);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee activated successfully',
-        data: { employee }
+        message: "Employee activated successfully",
+        data: { employee },
       };
 
       res.status(200).json(response);
@@ -181,8 +188,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to activate employee',
-        error: error.message
+        message: error.message || "Failed to activate employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -197,14 +204,14 @@ export class UserController {
       const { employeeId } = req.params;
 
       if (!employeeId) {
-        throw new ValidationError('Employee ID is required');
+        throw new ValidationError("Employee ID is required");
       }
 
       await this.userService.deleteEmployee(employeeId);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee deleted successfully'
+        message: "Employee deleted successfully",
       };
 
       res.status(200).json(response);
@@ -212,8 +219,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to delete employee',
-        error: error.message
+        message: error.message || "Failed to delete employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -229,8 +236,8 @@ export class UserController {
 
       const response: ApiResponse = {
         success: true,
-        message: 'Departments retrieved successfully',
-        data: { departments }
+        message: "Departments retrieved successfully",
+        data: { departments },
       };
 
       res.status(200).json(response);
@@ -238,8 +245,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get departments',
-        error: error.message
+        message: error.message || "Failed to get departments",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -255,8 +262,8 @@ export class UserController {
 
       const response: ApiResponse = {
         success: true,
-        message: 'Sections retrieved successfully',
-        data: { sections }
+        message: "Sections retrieved successfully",
+        data: { sections },
       };
 
       res.status(200).json(response);
@@ -264,8 +271,34 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get sections',
-        error: error.message
+        message: error.message || "Failed to get sections",
+        error: error.message,
+      };
+
+      res.status(statusCode).json(response);
+    }
+  }
+
+  /**
+   * Get dashboard statistics (Admin only)
+   */
+  async getDashboardStats(req: Request, res: Response): Promise<void> {
+    try {
+      const dashboardStats = await this.userService.getDashboardStats();
+
+      const response: ApiResponse = {
+        success: true,
+        message: "Dashboard statistics retrieved successfully",
+        data: { dashboard: dashboardStats },
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const response: ApiResponse = {
+        success: false,
+        message: error.message || "Failed to get dashboard statistics",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -281,8 +314,8 @@ export class UserController {
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee statistics retrieved successfully',
-        data: { stats }
+        message: "Employee statistics retrieved successfully",
+        data: { stats },
       };
 
       res.status(200).json(response);
@@ -290,8 +323,8 @@ export class UserController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get employee statistics',
-        error: error.message
+        message: error.message || "Failed to get employee statistics",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);

@@ -29,22 +29,24 @@ export class AuthController {
   }
 
   /**
-   * Admin login
+   * Unified login for both admin and employee
    */
-  async adminLogin(req: Request, res: Response): Promise<void> {
+  async login(req: Request, res: Response): Promise<void> {
     try {
       const { error, value } = loginSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const loginData: LoginRequest = value;
-      const result = await this.authService.adminLogin(loginData);
+      const result = await this.authService.login(loginData);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Admin login successful',
-        data: result
+        message: "Login successful",
+        data: result,
       };
 
       res.status(200).json(response);
@@ -52,8 +54,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Admin login failed',
-        error: error.message
+        message: error.message || "Login failed",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -61,35 +63,19 @@ export class AuthController {
   }
 
   /**
-   * Employee login
+   * Admin login (legacy - use /login instead)
+   * @deprecated Use /login endpoint instead
+   */
+  async adminLogin(req: Request, res: Response): Promise<void> {
+    return this.login(req, res);
+  }
+
+  /**
+   * Employee login (legacy - use /login instead)
+   * @deprecated Use /login endpoint instead
    */
   async employeeLogin(req: Request, res: Response): Promise<void> {
-    try {
-      const { error, value } = loginSchema.validate(req.body);
-      if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
-      }
-
-      const loginData: LoginRequest = value;
-      const result = await this.authService.employeeLogin(loginData);
-
-      const response: ApiResponse = {
-        success: true,
-        message: 'Employee login successful',
-        data: result
-      };
-
-      res.status(200).json(response);
-    } catch (error: any) {
-      const statusCode = error.statusCode || 500;
-      const response: ApiResponse = {
-        success: false,
-        message: error.message || 'Employee login failed',
-        error: error.message
-      };
-
-      res.status(statusCode).json(response);
-    }
+    return this.login(req, res);
   }
 
   /**
@@ -99,17 +85,22 @@ export class AuthController {
     try {
       const { error, value } = createEmployeeSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const adminId = req.user!.id;
       const employeeData: CreateEmployeeRequest = value;
-      const employee = await this.authService.createEmployee(employeeData, adminId);
+      const employee = await this.authService.createEmployee(
+        employeeData,
+        adminId,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: 'Employee created successfully',
-        data: { employee }
+        message: "Employee created successfully",
+        data: { employee },
       };
 
       res.status(201).json(response);
@@ -117,8 +108,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to create employee',
-        error: error.message
+        message: error.message || "Failed to create employee",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -135,8 +126,8 @@ export class AuthController {
 
       const response: ApiResponse = {
         success: true,
-        message: 'Profile retrieved successfully',
-        data: { user }
+        message: "Profile retrieved successfully",
+        data: { user },
       };
 
       res.status(200).json(response);
@@ -144,8 +135,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to get profile',
-        error: error.message
+        message: error.message || "Failed to get profile",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -159,17 +150,19 @@ export class AuthController {
     try {
       const userId = req.user!.id;
       const { error, value } = updateProfileSchema.validate(req.body);
-      
+
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const user = await this.authService.updateProfile(userId, value);
 
       const response: ApiResponse = {
         success: true,
-        message: 'Profile updated successfully',
-        data: { user }
+        message: "Profile updated successfully",
+        data: { user },
       };
 
       res.status(200).json(response);
@@ -177,8 +170,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to update profile',
-        error: error.message
+        message: error.message || "Failed to update profile",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -192,18 +185,26 @@ export class AuthController {
     try {
       const userId = req.user!.id;
       const { error, value } = changePasswordSchema.validate(req.body);
-      
+
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const { currentPassword, newPassword } = value;
-      const changePasswordData: ChangePasswordRequest = { currentPassword, newPassword };
-      const result = await this.authService.changePassword(userId, changePasswordData);
+      const changePasswordData: ChangePasswordRequest = {
+        currentPassword,
+        newPassword,
+      };
+      const result = await this.authService.changePassword(
+        userId,
+        changePasswordData,
+      );
 
       const response: ApiResponse = {
         success: true,
-        message: result.message
+        message: result.message,
       };
 
       res.status(200).json(response);
@@ -211,8 +212,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Failed to change password',
-        error: error.message
+        message: error.message || "Failed to change password",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -226,15 +227,15 @@ export class AuthController {
     try {
       const response: ApiResponse = {
         success: true,
-        message: 'Logout successful'
+        message: "Logout successful",
       };
 
       res.status(200).json(response);
     } catch (error: any) {
       const response: ApiResponse = {
         success: false,
-        message: 'Logout failed',
-        error: error.message
+        message: "Logout failed",
+        error: error.message,
       };
 
       res.status(500).json(response);
@@ -248,7 +249,9 @@ export class AuthController {
     try {
       const { error, value } = requestPasswordResetSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const resetData: PasswordResetRequest = value;
@@ -257,7 +260,7 @@ export class AuthController {
       const response: ApiResponse = {
         success: true,
         message: result.message,
-        data: { expiresAt: result.expiresAt }
+        data: { expiresAt: result.expiresAt },
       };
 
       res.status(200).json(response);
@@ -265,8 +268,8 @@ export class AuthController {
       const statusCode = error.statusCode || 500;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Password reset request failed',
-        error: error.message
+        message: error.message || "Password reset request failed",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
@@ -280,7 +283,9 @@ export class AuthController {
     try {
       const { error, value } = verifyResetTokenSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const tokenData: VerifyResetTokenRequest = value;
@@ -288,7 +293,7 @@ export class AuthController {
 
       const response: ApiResponse = {
         success: result.valid,
-        message: result.message
+        message: result.message,
       };
 
       const statusCode = result.valid ? 200 : 400;
@@ -296,8 +301,8 @@ export class AuthController {
     } catch (error: any) {
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Token verification failed',
-        error: error.message
+        message: error.message || "Token verification failed",
+        error: error.message,
       };
 
       res.status(500).json(response);
@@ -311,7 +316,9 @@ export class AuthController {
     try {
       const { error, value } = resetPasswordSchema.validate(req.body);
       if (error) {
-        throw new ValidationError(error.details?.[0]?.message || "Validation error");
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
       }
 
       const resetData: ResetPasswordRequest = value;
@@ -319,7 +326,7 @@ export class AuthController {
 
       const response: ApiResponse = {
         success: true,
-        message: result.message
+        message: result.message,
       };
 
       res.status(200).json(response);
@@ -327,8 +334,8 @@ export class AuthController {
       const statusCode = error.statusCode || 400;
       const response: ApiResponse = {
         success: false,
-        message: error.message || 'Password reset failed',
-        error: error.message
+        message: error.message || "Password reset failed",
+        error: error.message,
       };
 
       res.status(statusCode).json(response);
