@@ -1,4 +1,5 @@
 import { User, Attendance, Role, Shift, Mood } from '@prisma/client';
+import { Request } from "express";
 
 // Export Prisma enums
 export { Role, Shift, Mood };
@@ -73,6 +74,11 @@ export interface MarkAttendanceRequest {
   date?: string; // Optional, defaults to today in YYYY-MM-DD format
   mood: Mood;
   notes?: string;
+}
+
+export interface MarkAbsenceRequest {
+  date?: string; // Optional, defaults to today in YYYY-MM-DD format
+  reason: string;
 }
 
 // Legacy interface for backward compatibility
@@ -185,6 +191,10 @@ export interface PaginatedResponse<T> extends ApiResponse<T> {
 }
 
 // Extended Request interface for authenticated routes
+export interface AuthenticatedRequest extends Request {
+  user: SafeUser;
+}
+
 declare global {
   namespace Express {
     interface Request {

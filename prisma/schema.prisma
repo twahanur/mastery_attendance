@@ -105,3 +105,17 @@ model Attendance {
   @@unique([userId, date], name: "user_date_unique")
   @@map("attendances")
 }
+
+model AdminSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique  // e.g., "company_name", "working_hours", "smtp_config"
+  value       Json                // Flexible JSON storage for any setting type
+  category    String              // e.g., "company", "email", "attendance", "system"
+  description String?             // Optional description of what this setting does
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("admin_settings")
+}

@@ -4,6 +4,7 @@ import userRoutes from '../modules/user/user.routes';
 import attendanceRoutes from '../modules/attendance/attendance.routes';
 import { reportRoutes } from "../modules/reports/report.routes";
 import adminRoutes from '../modules/admin/admin.routes';
+import settingsRoutes from "../modules/settings/settings.routes";
 
 const router: Router = Router();
 
@@ -52,6 +53,7 @@ router.use('/users', userRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use("/reports", reportRoutes);
 router.use('/admin', adminRoutes);
+router.use("/settings", settingsRoutes);
 
 // 404 handler for undefined routes
 router.use('*', (req, res) => {

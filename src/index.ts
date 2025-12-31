@@ -11,7 +11,7 @@ import { ScheduleManager } from "./shared/services/scheduleManager";
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Security middleware
 app.use(helmet({
@@ -19,8 +19,10 @@ app.use(helmet({
 }));
 
 // CORS configuration
+const allowedOrigins =["https://optiluxbd-attendence-tracker.vercel.app","http://localhost:3000","http://localhost:3001"]
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -36,7 +38,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Rate limiting
-app.use(createRateLimiter(100, 15 * 60 * 1000)); // 100 requests per 15 minutes
+app.use(createRateLimiter(10000, 15 * 60 * 1000)); // 10000 requests per 15 minutes
 
 // API routes
 app.use('/api/v1', routes);

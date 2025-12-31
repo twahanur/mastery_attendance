@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { EmailSettingsService } from "../../modules/admin/services/emailSettings.service";
 
 interface EmailConfig {
   host: string;
@@ -16,17 +17,56 @@ interface EmailTemplate {
 }
 
 export class EmailService {
-  private transporter: nodemailer.Transporter;
-  private config: EmailConfig;
+  private transporter: nodemailer.Transporter | null = null;
+  private config: EmailConfig | null = null;
+  private emailSettingsService: EmailSettingsService;
 
   constructor() {
+    this.emailSettingsService = new EmailSettingsService();
+    this.initializeTransporter();
+  }
+
+  private async initializeTransporter(): Promise<void> {
+    try {
+      // Get SMTP settings from database
+      const smtpSettings = await this.emailSettingsService.getSMTPConfig();
+
+      this.config = {
+        host: smtpSettings.host,
+        port: smtpSettings.port,
+        secure: smtpSettings.secure,
+        user: smtpSettings.user,
+        pass: smtpSettings.pass,
+        from: smtpSettings.from,
+      };
+
+      this.transporter = nodemailer.createTransport({
+        host: this.config.host,
+        port: this.config.port,
+        secure: this.config.secure,
+        auth: {
+          user: this.config.user,
+          pass: this.config.pass,
+        },
+      });
+
+      console.log("✅ Email transporter initialized from database settings");
+    } catch (error) {
+      console.warn(
+        "⚠️ Failed to load email settings from database, falling back to environment variables",
+      );
+      this.initializeFallbackTransporter();
+    }
+  }
+
+  private initializeFallbackTransporter(): void {
     this.config = {
-      host: process.env.SMTP_HOST || 'smtp.gmail.com',
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      user: process.env.SMTP_USER || '',
-      pass: process.env.SMTP_PASS || '',
-      from: process.env.EMAIL_FROM || 'noreply@attendance.com'
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: parseInt(process.env.SMTP_PORT || "587"),
+      secure: process.env.SMTP_SECURE === "true",
+      user: process.env.SMTP_USER || "",
+      pass: process.env.SMTP_PASS || "",
+      from: process.env.EMAIL_FROM || "noreply@attendance.com",
     };
 
     this.transporter = nodemailer.createTransport({
@@ -35,37 +75,109 @@ export class EmailService {
       secure: this.config.secure,
       auth: {
         user: this.config.user,
-        pass: this.config.pass
-      }
+        pass: this.config.pass,
+      },
     });
+
+    console.log("📧 Email transporter initialized with fallback settings");
   }
 
-  async sendAttendanceReminder(employeeEmail: string, employeeName: string, employeeId: string): Promise<void> {
-    const template = this.getAttendanceReminderTemplate(employeeName, employeeId);
-    
-    await this.sendEmail(employeeEmail, template.subject, template.html, template.text);
+  async reloadSettings(): Promise<void> {
+    console.log("🔄 Reloading email settings...");
+    await this.initializeTransporter();
   }
 
-  async sendDailyAbsenteeReport(adminEmail: string, absentEmployees: any[], date: string): Promise<void> {
-    const template = this.getDailyAbsenteeReportTemplate(absentEmployees, date);
-    
-    await this.sendEmail(adminEmail, template.subject, template.html, template.text);
+  async sendAttendanceReminder(
+    employeeEmail: string,
+    employeeName: string,
+    employeeId: string,
+  ): Promise<void> {
+    // Try to get template from database first, fallback to hardcoded template
+    const dbTemplate = await this.getTemplateFromDatabase(
+      "attendanceReminder",
+      {
+        employeeName,
+        employeeId,
+        date: new Date().toLocaleDateString(),
+      },
+    );
+
+    const template =
+      dbTemplate ||
+      this.getAttendanceReminderTemplate(employeeName, employeeId);
+
+    await this.sendEmail(
+      employeeEmail,
+      template.subject,
+      template.html,
+      template.text,
+    );
   }
 
-  async sendWeeklyReport(recipientEmail: string, reportData: any): Promise<void> {
-    const template = this.getWeeklyReportTemplate(reportData);
-    
-    await this.sendEmail(recipientEmail, template.subject, template.html, template.text);
+  async sendDailyAbsenteeReport(
+    adminEmail: string,
+    absentEmployees: any[],
+    date: string,
+  ): Promise<void> {
+    // Try to get template from database first, fallback to hardcoded template
+    const dbTemplate = await this.getTemplateFromDatabase("absenteeReport", {
+      absentCount: absentEmployees.length,
+      date,
+      absenteesList: absentEmployees.map((emp) => emp.name).join(", "),
+    });
+
+    const template =
+      dbTemplate || this.getDailyAbsenteeReportTemplate(absentEmployees, date);
+
+    await this.sendEmail(
+      adminEmail,
+      template.subject,
+      template.html,
+      template.text,
+    );
   }
 
-  private async sendEmail(to: string, subject: string, html: string, text: string): Promise<void> {
+  async sendWeeklyReport(
+    recipientEmail: string,
+    reportData: any,
+  ): Promise<void> {
+    // Try to get template from database first, fallback to hardcoded template
+    const dbTemplate = await this.getTemplateFromDatabase("weeklyReport", {
+      weekStartDate: reportData.weekStartDate,
+      weekEndDate: reportData.weekEndDate,
+      totalEmployees: reportData.totalEmployees,
+      averageAttendance: reportData.averageAttendance,
+    });
+
+    const template = dbTemplate || this.getWeeklyReportTemplate(reportData);
+
+    await this.sendEmail(
+      recipientEmail,
+      template.subject,
+      template.html,
+      template.text,
+    );
+  }
+
+  private async sendEmail(
+    to: string,
+    subject: string,
+    html: string,
+    text: string,
+  ): Promise<void> {
+    if (!this.transporter || !this.config) {
+      throw new Error(
+        "Email service not initialized. Please check your email settings.",
+      );
+    }
+
     try {
       await this.transporter.sendMail({
         from: this.config.from,
         to,
         subject,
         html,
-        text
+        text,
       });
       console.log(`Email sent successfully to ${to}`);
     } catch (error) {
@@ -74,9 +186,45 @@ export class EmailService {
     }
   }
 
-  private getAttendanceReminderTemplate(employeeName: string, employeeId: string): EmailTemplate {
-    const subject = '🕐 Attendance Reminder - Please Mark Your Attendance';
-    
+  private async getTemplateFromDatabase(
+    templateType: string,
+    data: Record<string, any> = {},
+  ): Promise<EmailTemplate | null> {
+    try {
+      const template = await this.emailSettingsService.getTemplate(
+        templateType,
+      );
+      if (template) {
+        // Simple template variable replacement
+        let subject = template.subject;
+        let html = template.html;
+        let text = template.text || "";
+
+        // Replace template variables like {{employeeName}}, {{date}}, etc.
+        Object.keys(data).forEach((key) => {
+          const placeholder = `{{${key}}}`;
+          subject = subject.replace(new RegExp(placeholder, "g"), data[key]);
+          html = html.replace(new RegExp(placeholder, "g"), data[key]);
+          text = text.replace(new RegExp(placeholder, "g"), data[key]);
+        });
+
+        return { subject, html, text };
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to load template ${templateType} from database:`,
+        error,
+      );
+    }
+    return null;
+  }
+
+  private getAttendanceReminderTemplate(
+    employeeName: string,
+    employeeId: string,
+  ): EmailTemplate {
+    const subject = "🕐 Attendance Reminder - Please Mark Your Attendance";
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -108,7 +256,9 @@ export class EmailService {
               <p><strong>Current Time:</strong> ${new Date().toLocaleString()}</p>
               <p><strong>Reminder:</strong> Please mark your attendance before the end of your shift.</p>
               
-              <a href="${process.env.FRONTEND_URL || 'https://attendance.company.com'}" class="button">
+              <a href="${
+                process.env.FRONTEND_URL || "https://attendance.company.com"
+              }" class="button">
                 Mark Attendance Now
               </a>
               
@@ -136,7 +286,9 @@ export class EmailService {
       
       Current Time: ${new Date().toLocaleString()}
       
-      Please visit ${process.env.FRONTEND_URL || 'https://attendance.company.com'} to mark your attendance.
+      Please visit ${
+        process.env.FRONTEND_URL || "https://attendance.company.com"
+      } to mark your attendance.
       
       If you're working from home or on leave, please ensure you've informed your supervisor.
       
@@ -146,18 +298,25 @@ export class EmailService {
     return { subject, html, text };
   }
 
-  private getDailyAbsenteeReportTemplate(absentEmployees: any[], date: string): EmailTemplate {
+  private getDailyAbsenteeReportTemplate(
+    absentEmployees: any[],
+    date: string,
+  ): EmailTemplate {
     const subject = `📊 Daily Absentee Report - ${date}`;
-    
-    const employeeRows = absentEmployees.map(emp => `
+
+    const employeeRows = absentEmployees
+      .map(
+        (emp) => `
       <tr>
         <td>${emp.employeeId}</td>
         <td>${emp.firstName} ${emp.lastName}</td>
         <td>${emp.section}</td>
-        <td>${emp.department || 'N/A'}</td>
-        <td>${emp.designation || 'N/A'}</td>
+        <td>${emp.department || "N/A"}</td>
+        <td>${emp.designation || "N/A"}</td>
       </tr>
-    `).join('');
+    `,
+      )
+      .join("");
 
     const html = `
       <!DOCTYPE html>
@@ -222,7 +381,12 @@ export class EmailService {
       Absent Employees: ${absentEmployees.length}
       
       Employee List:
-      ${absentEmployees.map(emp => `${emp.employeeId} - ${emp.firstName} ${emp.lastName} (${emp.section})`).join('\n')}
+      ${absentEmployees
+        .map(
+          (emp) =>
+            `${emp.employeeId} - ${emp.firstName} ${emp.lastName} (${emp.section})`,
+        )
+        .join("\n")}
       
       Generated at: ${new Date().toLocaleString()}
     `;
@@ -232,7 +396,7 @@ export class EmailService {
 
   private getWeeklyReportTemplate(reportData: any): EmailTemplate {
     const subject = `📈 Weekly Attendance Report - Week of ${reportData.weekStart}`;
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -270,7 +434,9 @@ export class EmailService {
               </div>
               
               <h3>Weekly Summary</h3>
-              <p>This week's attendance performance shows ${reportData.averageAttendance}% average attendance rate.</p>
+              <p>This week's attendance performance shows ${
+                reportData.averageAttendance
+              }% average attendance rate.</p>
               
               <p><em>Report generated: ${new Date().toLocaleString()}</em></p>
             </div>

@@ -943,4 +943,192 @@ export class ReportService {
       </html>
     `;
   }
+
+  /**
+   * Generate day-wise attendance data
+   */
+  async generateDayWiseAttendance(
+    startDate: string, 
+    endDate: string, 
+    limit: number = 30
+  ): Promise<any[]> {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    // Ensure dates are at start of day
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    // Validate date range
+    if (start > end) {
+      throw new Error('Start date must be before end date');
+    }
+
+    // Get all active employees
+    const totalEmployees = await prisma.user.findMany({
+      where: {
+        role: Role.EMPLOYEE,
+        isActive: true
+      },
+      select: {
+        id: true,
+        employeeId: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        department: true,
+        section: true
+      },
+      orderBy: { employeeId: 'asc' }
+    });
+
+    const totalEmployeeCount = totalEmployees.length;
+
+    // Get attendance records for the date range
+    const attendanceRecords = await prisma.attendance.findMany({
+      where: {
+        date: {
+          gte: start,
+          lte: end
+        }
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            employeeId: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            department: true,
+            section: true
+          }
+        }
+      },
+      orderBy: { date: 'desc' }
+    });
+
+    // Group attendance by date
+    const attendanceByDate = new Map<string, any[]>();
+    attendanceRecords.forEach(record => {
+      const dateKey = record.date.toISOString().split('T')[0];
+      if (!attendanceByDate.has(dateKey)) {
+        attendanceByDate.set(dateKey, []);
+      }
+      attendanceByDate.get(dateKey)!.push(record);
+    });
+
+    // Generate day-wise data
+    const dayWiseData = [];
+    let dayCount = 0;
+    
+    for (let currentDate = new Date(end); currentDate >= start && dayCount < limit; currentDate.setDate(currentDate.getDate() - 1), dayCount++) {
+      const dateKey = currentDate.toISOString().split('T')[0];
+      const dayOfWeek = currentDate.toLocaleDateString('en-US', { weekday: 'long' });
+      
+      // Skip weekends unless there's attendance data
+      if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+        if (!attendanceByDate.has(dateKey)) {
+          continue;
+        }
+      }
+
+      const dailyAttendances = attendanceByDate.get(dateKey) || [];
+      const presentEmployeeIds = new Set(dailyAttendances.map(a => a.userId));
+      
+      // Categorize employees
+      const presentEmployees = dailyAttendances.map(attendance => ({
+        id: attendance.user.id,
+        employeeId: attendance.user.employeeId,
+        name: `${attendance.user.firstName} ${attendance.user.lastName}`,
+        email: attendance.user.email,
+        department: attendance.user.department,
+        section: attendance.user.section,
+        checkInTime: attendance.checkInTime ? new Date(attendance.checkInTime).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }) : null,
+        checkOutTime: attendance.checkOutTime ? new Date(attendance.checkOutTime).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit',
+          hour12: false 
+        }) : null,
+        mood: attendance.mood,
+        shift: attendance.shift,
+        notes: attendance.notes
+      }));
+
+      const absentEmployees = totalEmployees
+        .filter(emp => !presentEmployeeIds.has(emp.id))
+        .map(emp => ({
+          id: emp.id,
+          employeeId: emp.employeeId,
+          name: `${emp.firstName} ${emp.lastName}`,
+          email: emp.email,
+          department: emp.department,
+          section: emp.section
+        }));
+
+      const presentCount = presentEmployees.length;
+      const absentCount = absentEmployees.length;
+      const attendancePercentage = totalEmployeeCount > 0 
+        ? Math.round((presentCount / totalEmployeeCount) * 100) 
+        : 0;
+
+      // Calculate late arrivals (after 9:30 AM)
+      const lateArrivals = presentEmployees.filter(emp => {
+        if (!emp.checkInTime) return false;
+        const [hour, minute] = emp.checkInTime.split(':').map(Number);
+        return hour > 9 || (hour === 9 && minute > 30);
+      });
+
+      // Calculate early departures (before 5:00 PM)
+      const earlyDepartures = presentEmployees.filter(emp => {
+        if (!emp.checkOutTime) return false;
+        const [hour, minute] = emp.checkOutTime.split(':').map(Number);
+        return hour < 17;
+      });
+
+      // Department-wise breakdown
+      const departmentStats: Record<string, { total: number; present: number; absent: number }> = {};
+      totalEmployees.forEach(emp => {
+        const dept = emp.department || 'Unknown';
+        if (!departmentStats[dept]) {
+          departmentStats[dept] = { total: 0, present: 0, absent: 0 };
+        }
+        departmentStats[dept].total++;
+        if (presentEmployeeIds.has(emp.id)) {
+          departmentStats[dept].present++;
+        } else {
+          departmentStats[dept].absent++;
+        }
+      });
+
+      dayWiseData.push({
+        date: dateKey,
+        dayOfWeek,
+        isWeekend: currentDate.getDay() === 0 || currentDate.getDay() === 6,
+        statistics: {
+          totalEmployees: totalEmployeeCount,
+          presentCount,
+          absentCount,
+          attendancePercentage,
+          lateArrivals: lateArrivals.length,
+          earlyDepartures: earlyDepartures.length
+        },
+        presentEmployees: presentEmployees.sort((a, b) => a.employeeId?.localeCompare(b.employeeId || '') || 0),
+        absentEmployees: absentEmployees.sort((a, b) => a.employeeId?.localeCompare(b.employeeId || '') || 0),
+        lateArrivals,
+        earlyDepartures,
+        departmentStats: Object.entries(departmentStats).map(([dept, stats]) => ({
+          department: dept,
+          ...stats,
+          attendancePercentage: Math.round((stats.present / stats.total) * 100)
+        }))
+      });
+    }
+
+    return dayWiseData.reverse(); // Return in chronological order
+  }
 }

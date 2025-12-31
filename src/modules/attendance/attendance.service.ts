@@ -1,6 +1,7 @@
 import { prisma } from '../../shared/config/database';
 import {
   MarkAttendanceRequest,
+  MarkAbsenceRequest,
   AttendanceResponse,
   AttendanceSummary,
   AttendanceDatesResponse,
@@ -19,8 +20,14 @@ import {
   formatDateToString,
   isFutureDate
 } from '../../shared/utils/dateUtils';
+import { CompanySettingsService } from "../settings/companySettings.service";
 
 export class AttendanceService {
+  private companySettings: CompanySettingsService;
+
+  constructor() {
+    this.companySettings = new CompanySettingsService();
+  }
   /**
    * Mark attendance for a user on a specific date (simplified version)
    * Employee details are fetched from the authenticated user's profile
@@ -100,6 +107,9 @@ export class AttendanceService {
     if (isFutureDate(dateValidation.parsedDate)) {
       throw new ValidationError("Cannot mark attendance for future dates");
     }
+
+    // Validate working day (check against company settings)
+    await this.validateWorkingDay(attendanceDate);
 
     // Auto-set check-in time to current time
     const checkInDateTime = new Date();
@@ -681,5 +691,251 @@ export class AttendanceService {
     };
 
     return result;
+  }
+
+  /**
+   * Validate if the given date is a working day according to company settings
+   */
+  private async validateWorkingDay(dateString: string): Promise<void> {
+    try {
+      const isWorkingDay = await this.companySettings.isWorkingDay(dateString);
+
+      if (!isWorkingDay) {
+        const isHoliday = await this.companySettings.isHoliday(dateString);
+        const dayName = new Date(dateString).toLocaleDateString("en-US", {
+          weekday: "long",
+        });
+
+        if (isHoliday) {
+          throw new ValidationError(
+            `Cannot mark attendance on holiday (${dateString})`,
+          );
+        } else {
+          throw new ValidationError(
+            `Cannot mark attendance on non-working day: ${dayName} (${dateString})`,
+          );
+        }
+      }
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        throw error;
+      }
+      // If company settings are not configured, allow attendance
+      console.warn(
+        "Company settings not configured, allowing attendance for any day:",
+        error,
+      );
+    }
+  }
+
+  /**
+   * Get company working hours for validation
+   */
+  async getWorkingHours() {
+    try {
+      return await this.companySettings.getWorkingHours();
+    } catch (error) {
+      console.warn(
+        "Could not fetch working hours from settings, using defaults:",
+        error,
+      );
+      return {
+        startTime: "09:00",
+        endTime: "18:00",
+        breakDuration: 60,
+        gracePeriod: 15,
+      };
+    }
+  }
+
+  /**
+   * Check if current time is within working hours (with grace period)
+   */
+  async isWithinWorkingHours(): Promise<{
+    isWithin: boolean;
+    message?: string;
+  }> {
+    try {
+      const workingHours = await this.getWorkingHours();
+      const now = new Date();
+      const currentTime = `${now.getHours().toString().padStart(2, "0")}:${now
+        .getMinutes()
+        .toString()
+        .padStart(2, "0")}`;
+
+      // Convert times to minutes for comparison
+      const [startHour, startMin] = workingHours.startTime
+        .split(":")
+        .map(Number);
+      const [endHour, endMin] = workingHours.endTime.split(":").map(Number);
+      const [currentHour, currentMin] = currentTime.split(":").map(Number);
+
+      const startMinutes = startHour * 60 + startMin - workingHours.gracePeriod; // Include grace period
+      const endMinutes = endHour * 60 + endMin;
+      const currentMinutes = currentHour * 60 + currentMin;
+
+      const isWithin =
+        currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+
+      if (!isWithin) {
+        if (currentMinutes < startMinutes) {
+          return {
+            isWithin: false,
+            message: `Too early. Working hours start at ${workingHours.startTime} (with ${workingHours.gracePeriod} min grace period)`,
+          };
+        } else {
+          return {
+            isWithin: false,
+            message: `Too late. Working hours end at ${workingHours.endTime}`,
+          };
+        }
+      }
+
+      return { isWithin: true };
+    } catch (error) {
+      console.warn(
+        "Could not validate working hours, allowing attendance:",
+        error,
+      );
+      return { isWithin: true };
+    }
+  }
+
+  /**
+   * Record an absence with a required reason. Uses notes to store the reason
+   * and keeps check-in/out times empty to distinguish from present attendance.
+   */
+  async markAbsence(
+    userId: string,
+    data: MarkAbsenceRequest,
+  ): Promise<AttendanceResponse> {
+    const { date: dateString, reason } = data;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        firstName: true,
+        lastName: true,
+        employeeId: true,
+        section: true,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    if (!user.isActive) {
+      throw new ValidationError("User account is inactive");
+    }
+
+    if (!user.employeeId) {
+      throw new ValidationError(
+        "Employee ID not set in profile. Please contact administrator",
+      );
+    }
+
+    if (!user.section) {
+      throw new ValidationError(
+        "Section not set in profile. Please contact administrator",
+      );
+    }
+
+    const employeeName =
+      [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown";
+
+    const currentHour = new Date().getHours();
+    let shift: Shift;
+    if (currentHour >= 6 && currentHour < 14) {
+      shift = Shift.MORNING;
+    } else if (currentHour >= 14 && currentHour < 18) {
+      shift = Shift.AFTERNOON;
+    } else if (currentHour >= 18 && currentHour < 22) {
+      shift = Shift.EVENING;
+    } else {
+      shift = Shift.NIGHT;
+    }
+
+    const absenceDate = dateString || getCurrentDateString();
+    const dateValidation = validateAndParseDate(absenceDate);
+    if (
+      !dateValidation.isValidDate ||
+      !dateValidation.parsedDate ||
+      !dateValidation.formattedDate
+    ) {
+      throw new ValidationError(
+        "Invalid date format. Please use YYYY-MM-DD format",
+      );
+    }
+
+    if (isFutureDate(dateValidation.parsedDate)) {
+      throw new ValidationError("Cannot mark absence for future dates");
+    }
+
+    await this.validateWorkingDay(absenceDate);
+
+    const existing = await prisma.attendance.findUnique({
+      where: {
+        user_date_unique: {
+          userId,
+          date: dateValidation.parsedDate,
+        },
+      },
+    });
+
+    if (existing) {
+      throw new ConflictError(
+        `Attendance already marked for ${dateValidation.formattedDate}`,
+      );
+    }
+
+    const absenceNotes = reason.trim();
+    if (!absenceNotes) {
+      throw new ValidationError("Reason for absence cannot be empty");
+    }
+
+    const attendance = await prisma.attendance.create({
+      data: {
+        userId,
+        date: dateValidation.parsedDate,
+        employeeName,
+        employeeId: user.employeeId,
+        section: user.section,
+        shift,
+        // Mood is required by schema; use POOR to denote absence explicitly
+        mood: Mood.POOR,
+        notes: absenceNotes,
+        checkInTime: null,
+        checkOutTime: null,
+      },
+      select: {
+        id: true,
+        date: true,
+        employeeName: true,
+        employeeId: true,
+        section: true,
+        shift: true,
+        mood: true,
+        checkInTime: true,
+        checkOutTime: true,
+        notes: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      id: attendance.id,
+      date: dateValidation.formattedDate,
+      employeeName: attendance.employeeName,
+      employeeId: attendance.employeeId,
+      section: attendance.section,
+      shift: attendance.shift,
+      mood: attendance.mood,
+      checkInTime: attendance.checkInTime || null,
+      checkOutTime: attendance.checkOutTime || null,
+      notes: attendance.notes || null,
+      createdAt: attendance.createdAt,
+    };
   }
 }

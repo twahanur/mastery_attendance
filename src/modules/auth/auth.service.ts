@@ -20,9 +20,15 @@ import {
 import { hashPassword, comparePassword, generateToken } from '../../shared/utils/authUtils';
 import { validateAndParseDate } from '../../shared/utils/dateUtils';
 import { emailService } from '../../shared/utils/passwordResetEmailService';
+import { UserSettingsService } from '../admin/services/userSettings.service';
 import crypto from 'crypto';
 
 export class AuthService {
+  private userSettingsService: UserSettingsService;
+
+  constructor() {
+    this.userSettingsService = new UserSettingsService();
+  }
   /**
    * Unified login for both admin and employee users
    */
@@ -35,7 +41,16 @@ export class AuthService {
     });
 
     if (!user) {
+      await this.handleFailedLogin(email); // Track failed attempts even for non-existent users
       throw new AuthenticationError("Invalid credentials");
+    }
+
+    // Check account lockout status
+    const lockoutCheck = await this.checkAccountLockout(user.id);
+    if (lockoutCheck.isLocked) {
+      throw new AuthenticationError(
+        `Account is locked. ${lockoutCheck.message || 'Please contact administrator.'}`
+      );
     }
 
     // Check if employee account is active
@@ -48,8 +63,12 @@ export class AuthService {
     // Verify password
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
+      await this.handleFailedLogin(email, user.id);
       throw new AuthenticationError("Invalid credentials");
     }
+
+    // Reset failed login attempts on successful login
+    await this.resetFailedLoginAttempts(user.id);
 
     const safeUser: SafeUser = this.createSafeUser(user);
     const token = generateToken(safeUser);
@@ -128,6 +147,18 @@ export class AuthService {
         );
       }
       joiningDate = dateValidation.parsedDate;
+    }
+
+    // Validate password strength
+    const passwordValidation = await this.validatePasswordStrength(password, {
+      email,
+      name: `${firstName} ${lastName}`
+    });
+    
+    if (!passwordValidation.valid) {
+      throw new ValidationError(
+        `Password does not meet requirements: ${passwordValidation.errors.join(', ')}`
+      );
     }
 
     // Hash password
@@ -499,6 +530,18 @@ export class AuthService {
       );
     }
 
+    // Validate new password strength
+    const passwordValidation = await this.validatePasswordStrength(newPassword, {
+      email: user.email,
+      name: `${user.firstName} ${user.lastName}`
+    });
+    
+    if (!passwordValidation.valid) {
+      throw new ValidationError(
+        `New password does not meet requirements: ${passwordValidation.errors.join(', ')}`
+      );
+    }
+
     // Hash new password
     const hashedPassword = await hashPassword(newPassword);
 
@@ -511,6 +554,178 @@ export class AuthService {
     return {
       message: "Password changed successfully.",
     };
+  }
+
+  /**
+   * Check if account is locked due to failed login attempts
+   */
+  private async checkAccountLockout(userId: string): Promise<{ isLocked: boolean; message?: string }> {
+    try {
+      const lockoutRules = await this.userSettingsService.getLockoutRules();
+      
+      if (!lockoutRules.enabled) {
+        return { isLocked: false };
+      }
+
+      // Check for existing lockout record
+      const lockoutRecord = await prisma.adminSettings.findFirst({
+        where: {
+          key: `lockout.${userId}`,
+          category: 'security'
+        }
+      });
+
+      if (!lockoutRecord) {
+        return { isLocked: false };
+      }
+
+      const lockoutData = lockoutRecord.value as {
+        failedAttempts: number;
+        lastFailedAttempt: string;
+        lockedUntil?: string;
+      };
+
+      // Check if currently locked
+      if (lockoutData.lockedUntil) {
+        const lockoutExpiry = new Date(lockoutData.lockedUntil);
+        if (new Date() < lockoutExpiry) {
+          const remainingMinutes = Math.ceil((lockoutExpiry.getTime() - new Date().getTime()) / (1000 * 60));
+          return { 
+            isLocked: true, 
+            message: `Account locked for ${remainingMinutes} more minutes.` 
+          };
+        }
+      }
+
+      // Check if failed attempts should be reset
+      const lastFailedAttempt = new Date(lockoutData.lastFailedAttempt);
+      const resetAfterMinutes = lockoutRules.resetFailedAttemptsAfterMinutes;
+      const resetTime = new Date(lastFailedAttempt.getTime() + (resetAfterMinutes * 60 * 1000));
+      
+      if (new Date() > resetTime) {
+        // Reset failed attempts
+        await this.resetFailedLoginAttempts(userId);
+        return { isLocked: false };
+      }
+
+      return { isLocked: false };
+    } catch (error) {
+      console.error('Error checking account lockout:', error);
+      return { isLocked: false }; // Fail open for system stability
+    }
+  }
+
+  /**
+   * Handle failed login attempt
+   */
+  private async handleFailedLogin(email: string, userId?: string): Promise<void> {
+    try {
+      const lockoutRules = await this.userSettingsService.getLockoutRules();
+      
+      if (!lockoutRules.enabled || !userId) {
+        return;
+      }
+
+      const lockoutKey = `lockout.${userId}`;
+      
+      // Get existing lockout record
+      const existingRecord = await prisma.adminSettings.findFirst({
+        where: {
+          key: lockoutKey,
+          category: 'security'
+        }
+      });
+
+      const currentData = existingRecord?.value as {
+        failedAttempts: number;
+        lastFailedAttempt: string;
+        lockedUntil?: string;
+      } || { failedAttempts: 0, lastFailedAttempt: new Date().toISOString() };
+
+      const newFailedAttempts = currentData.failedAttempts + 1;
+      const now = new Date().toISOString();
+
+      let lockedUntil: string | undefined;
+      if (newFailedAttempts >= lockoutRules.maxFailedAttempts) {
+        const lockoutDuration = lockoutRules.lockoutDurationMinutes * 60 * 1000;
+        lockedUntil = new Date(Date.now() + lockoutDuration).toISOString();
+
+        // Notify admin if enabled
+        if (lockoutRules.notifyAdminOnLockout) {
+          await this.notifyAdminAccountLocked(email, userId);
+        }
+      }
+
+      const updatedData = {
+        failedAttempts: newFailedAttempts,
+        lastFailedAttempt: now,
+        ...(lockedUntil && { lockedUntil })
+      };
+
+      if (existingRecord) {
+        await prisma.adminSettings.update({
+          where: { id: existingRecord.id },
+          data: { value: updatedData }
+        });
+      } else {
+        await prisma.adminSettings.create({
+          data: {
+            key: lockoutKey,
+            value: updatedData,
+            category: 'security',
+            description: `Login attempt tracking for user ${userId}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error handling failed login:', error);
+    }
+  }
+
+  /**
+   * Reset failed login attempts for a user
+   */
+  private async resetFailedLoginAttempts(userId: string): Promise<void> {
+    try {
+      const lockoutKey = `lockout.${userId}`;
+      
+      await prisma.adminSettings.deleteMany({
+        where: {
+          key: lockoutKey,
+          category: 'security'
+        }
+      });
+    } catch (error) {
+      console.error('Error resetting failed login attempts:', error);
+    }
+  }
+
+  /**
+   * Notify admin about account lockout
+   */
+  private async notifyAdminAccountLocked(email: string, userId: string): Promise<void> {
+    // This would integrate with the email service to send notifications
+    // Implementation depends on email service integration
+    console.log(`Account locked for user ${email} (ID: ${userId})`);
+  }
+
+  /**
+   * Enhanced password validation using user settings
+   */
+  async validatePasswordStrength(password: string, userInfo?: { email?: string; name?: string }): Promise<{ valid: boolean; errors: string[] }> {
+    return this.userSettingsService.validatePassword(password, userInfo);
+  }
+
+  /**
+   * Check if registration is allowed for an email
+   */
+  async validateRegistration(email: string): Promise<{ allowed: boolean; reason?: string }> {
+    const emailValidation = await this.userSettingsService.validateRegistrationEmail(email);
+    if (!emailValidation.valid) {
+      return { allowed: false, reason: emailValidation.reason };
+    }
+
+    return this.userSettingsService.isRegistrationAllowed(email);
   }
 
   /**

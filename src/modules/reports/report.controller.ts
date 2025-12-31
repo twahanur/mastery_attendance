@@ -504,4 +504,54 @@ export class ReportController {
     monday.setDate(monday.getDate() + diff);
     return monday.toISOString().split('T')[0];
   }
+
+  /**
+   * Get day-wise attendance data with present/absent lists
+   */
+  async getDayWiseAttendance(req: Request, res: Response): Promise<void> {
+    try {
+      const { startDate, endDate, limit = '30' } = req.query;
+      
+      // Validate parameters
+      if (!startDate || !endDate) {
+        throw new ValidationError('Both startDate and endDate parameters are required (YYYY-MM-DD format)');
+      }
+
+      if (typeof startDate !== 'string' || typeof endDate !== 'string') {
+        throw new ValidationError('Date parameters must be strings in YYYY-MM-DD format');
+      }
+
+      const limitNumber = parseInt(limit as string, 10);
+      if (isNaN(limitNumber) || limitNumber < 1 || limitNumber > 100) {
+        throw new ValidationError('Limit must be a number between 1 and 100');
+      }
+
+      const dayWiseData = await this.reportService.generateDayWiseAttendance(
+        startDate,
+        endDate,
+        limitNumber
+      );
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Day-wise attendance data retrieved successfully',
+        data: {
+          period: { startDate, endDate },
+          totalDays: dayWiseData.length,
+          dayWiseAttendance: dayWiseData
+        }
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const response: ApiResponse = {
+        success: false,
+        message: error.message || 'Failed to retrieve day-wise attendance data',
+        error: error.message
+      };
+
+      res.status(statusCode).json(response);
+    }
+  }
 }

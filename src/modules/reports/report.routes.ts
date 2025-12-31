@@ -118,4 +118,17 @@ router.get('/summary',
   reportController.getAttendanceSummary.bind(reportController)
 );
 
+/**
+ * @route GET /reports/day-wise
+ * @desc Get day-wise attendance data with present/absent lists
+ * @access Admin only
+ * @query startDate - Start date (YYYY-MM-DD)
+ * @query endDate - End date (YYYY-MM-DD)  
+ * @query limit - Number of days to return (default: 30, max: 100)
+ */
+router.get('/day-wise',
+  roleGuard({ roles: [Role.ADMIN] }),
+  reportController.getDayWiseAttendance.bind(reportController)
+);
+
 export { router as reportRoutes };

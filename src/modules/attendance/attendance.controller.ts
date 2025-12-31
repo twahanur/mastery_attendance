@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AttendanceService } from './attendance.service';
 import { 
   markAttendanceSchema, 
+  markAbsenceSchema,
   updateAttendanceSchema,
   paginationSchema, 
   attendanceFilterSchema,
@@ -11,7 +12,8 @@ import {
   ApiResponse, 
   ValidationError, 
   PaginatedResponse,
-  MarkAttendanceRequest 
+  MarkAttendanceRequest,
+  MarkAbsenceRequest 
 } from '../../types';
 
 export class AttendanceController {
@@ -55,6 +57,45 @@ export class AttendanceController {
       const response: ApiResponse = {
         success: false,
         message: error.message || "Failed to mark attendance",
+        error: error.message,
+      };
+
+      res.status(statusCode).json(response);
+    }
+  }
+
+  /**
+   * Record an absence for the current user with a required reason
+   */
+  async markAbsence(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user!.id;
+
+      const { error, value } = markAbsenceSchema.validate(req.body);
+      if (error) {
+        throw new ValidationError(
+          error.details?.[0]?.message || "Validation error",
+        );
+      }
+
+      const absenceData: MarkAbsenceRequest = value;
+      const attendance = await this.attendanceService.markAbsence(
+        userId,
+        absenceData,
+      );
+
+      const response: ApiResponse = {
+        success: true,
+        message: "Absence recorded successfully",
+        data: { attendance },
+      };
+
+      res.status(201).json(response);
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const response: ApiResponse = {
+        success: false,
+        message: error.message || "Failed to record absence",
         error: error.message,
       };
 

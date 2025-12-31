@@ -12,6 +12,7 @@ router.use(adminOrEmployee);
 
 // Attendance management routes
 router.post('/mark', attendanceController.markAttendance.bind(attendanceController));
+router.post('/absent', attendanceController.markAbsence.bind(attendanceController));
 router.put('/:attendanceId', attendanceController.updateAttendance.bind(attendanceController));
 router.get('/my-records', attendanceController.getMyAttendanceRecords.bind(attendanceController));
 router.get('/current-month-summary', attendanceController.getCurrentMonthSummary.bind(attendanceController));
