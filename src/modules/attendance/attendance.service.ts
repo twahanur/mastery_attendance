@@ -9,7 +9,8 @@ import {
   ValidationError,
   NotFoundError,
   Shift,
-  Mood
+  Mood,
+  Role
 } from '../../types';
 import {
   getCurrentDateString,
@@ -937,5 +938,145 @@ export class AttendanceService {
       notes: attendance.notes || null,
       createdAt: attendance.createdAt,
     };
+  }
+
+  /**
+   * Get attendance chart data for visualization
+   * Returns daily aggregated attendance data for the specified number of days
+   */
+  async getChartData(days: number = 90): Promise<Array<{
+    date: string;
+    present: number;
+    absent: number;
+    late: number;
+    total: number;
+  }>> {
+    // Calculate start date
+    const endDate = new Date();
+    endDate.setHours(23, 59, 59, 999);
+    
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Get total active employees
+    const totalEmployees = await prisma.user.count({
+      where: {
+        role: Role.EMPLOYEE,
+        isActive: true,
+      },
+    });
+
+    // Get working hours to determine late arrivals
+    const workingHours = await this.companySettings.getWorkingHours();
+    
+    // Parse the start time to get hours and minutes
+    const [startHour, startMinute] = workingHours.startTime.split(':').map(Number);
+    const gracePeriodMinutes = workingHours.gracePeriod || 15;
+
+    // Get all attendance records in the date range
+    const attendanceRecords = await prisma.attendance.findMany({
+      where: {
+        date: {
+          gte: startDate,
+          lte: endDate,
+        },
+        user: {
+          role: Role.EMPLOYEE,
+          isActive: true,
+        },
+      },
+      select: {
+        date: true,
+        checkInTime: true,
+        notes: true,
+      },
+      orderBy: {
+        date: 'asc',
+      },
+    });
+
+    // Group records by date
+    const recordsByDate = new Map<string, Array<{
+      checkInTime: Date | null;
+      notes: string | null;
+    }>>();
+
+    attendanceRecords.forEach(record => {
+      const dateStr = record.date.toISOString().split('T')[0];
+      if (!recordsByDate.has(dateStr)) {
+        recordsByDate.set(dateStr, []);
+      }
+      recordsByDate.get(dateStr)!.push({
+        checkInTime: record.checkInTime,
+        notes: record.notes,
+      });
+    });
+
+    // Generate data for each day in the range
+    const chartData: Array<{
+      date: string;
+      present: number;
+      absent: number;
+      late: number;
+      total: number;
+    }> = [];
+
+    const currentDate = new Date(startDate);
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const dayOfWeek = currentDate.getDay();
+      
+      // Skip weekends (0 = Sunday, 6 = Saturday)
+      // You may want to make this configurable based on company working days
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        const records = recordsByDate.get(dateStr) || [];
+        
+        let present = 0;
+        let late = 0;
+        let absent = 0;
+
+        records.forEach(record => {
+          // If there's a checkInTime, the employee was present
+          if (record.checkInTime) {
+            present++;
+            
+            // Check if they were late
+            const checkInDate = new Date(record.checkInTime);
+            const checkInHour = checkInDate.getHours();
+            const checkInMinute = checkInDate.getMinutes();
+            
+            // Calculate minutes from start of day
+            const checkInTotalMinutes = checkInHour * 60 + checkInMinute;
+            const startTotalMinutes = startHour * 60 + startMinute;
+            const lateThreshold = startTotalMinutes + gracePeriodMinutes;
+            
+            if (checkInTotalMinutes > lateThreshold) {
+              late++;
+            }
+          } else {
+            // No check-in time means absence (marked via markAbsence)
+            absent++;
+          }
+        });
+
+        // Calculate remaining absences (employees who didn't mark attendance at all)
+        const totalMarked = records.length;
+        const notMarked = totalEmployees - totalMarked;
+        absent += notMarked;
+
+        chartData.push({
+          date: dateStr,
+          present,
+          absent,
+          late,
+          total: totalEmployees,
+        });
+      }
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return chartData;
   }
 }

@@ -17,6 +17,7 @@ router.put('/:attendanceId', attendanceController.updateAttendance.bind(attendan
 router.get('/my-records', attendanceController.getMyAttendanceRecords.bind(attendanceController));
 router.get('/current-month-summary', attendanceController.getCurrentMonthSummary.bind(attendanceController));
 router.get('/month-summary', attendanceController.getMonthSummary.bind(attendanceController));
+router.get('/chart', attendanceController.getAttendanceChart.bind(attendanceController));
 router.get('/today', attendanceController.checkTodayAttendance.bind(attendanceController));
 router.get('/date/:date', attendanceController.checkDateAttendance.bind(attendanceController));
 router.get('/stats', attendanceController.getAttendanceStats.bind(attendanceController));

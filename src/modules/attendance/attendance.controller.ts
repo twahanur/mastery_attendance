@@ -407,4 +407,42 @@ export class AttendanceController {
       res.status(statusCode).json(response);
     }
   }
+
+  /**
+   * Get attendance chart data for visualization
+   * Returns aggregated daily attendance data for the specified number of days
+   */
+  async getAttendanceChart(req: Request, res: Response): Promise<void> {
+    try {
+      // Parse days from query parameter, default to 90
+      const days = req.query.days ? parseInt(req.query.days as string, 10) : 90;
+
+      // Validate days parameter
+      if (isNaN(days) || days < 1 || days > 365) {
+        throw new ValidationError("Days must be a number between 1 and 365");
+      }
+
+      const chartData = await this.attendanceService.getChartData(days);
+
+      const response: ApiResponse = {
+        success: true,
+        message: "Attendance chart data retrieved successfully",
+        data: {
+          chartData,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      res.status(200).json(response);
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      const response: ApiResponse = {
+        success: false,
+        message: error.message || "Failed to get attendance chart data",
+        error: error.message,
+      };
+
+      res.status(statusCode).json(response);
+    }
+  }
 }
