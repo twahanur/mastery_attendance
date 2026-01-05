@@ -7,7 +7,10 @@ import {
   changePasswordSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
-  verifyResetTokenSchema
+  verifyResetTokenSchema,
+  getCreateEmployeeSchema,
+  getChangePasswordSchema,
+  getResetPasswordSchema
 } from './auth.validation';
 import { 
   LoginRequest, 
@@ -83,7 +86,9 @@ export class AuthController {
    */
   async createEmployee(req: Request, res: Response): Promise<void> {
     try {
-      const { error, value } = createEmployeeSchema.validate(req.body);
+      // Use dynamic validation schema
+      const schema = await getCreateEmployeeSchema();
+      const { error, value } = schema.validate(req.body);
       if (error) {
         throw new ValidationError(
           error.details?.[0]?.message || "Validation error",
@@ -184,7 +189,9 @@ export class AuthController {
   async changePassword(req: Request, res: Response): Promise<void> {
     try {
       const userId = req.user!.id;
-      const { error, value } = changePasswordSchema.validate(req.body);
+      // Use dynamic validation schema
+      const schema = await getChangePasswordSchema();
+      const { error, value } = schema.validate(req.body);
 
       if (error) {
         throw new ValidationError(
@@ -314,7 +321,9 @@ export class AuthController {
    */
   async resetPassword(req: Request, res: Response): Promise<void> {
     try {
-      const { error, value } = resetPasswordSchema.validate(req.body);
+      // Use dynamic validation schema
+      const schema = await getResetPasswordSchema();
+      const { error, value } = schema.validate(req.body);
       if (error) {
         throw new ValidationError(
           error.details?.[0]?.message || "Validation error",

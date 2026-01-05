@@ -3,9 +3,10 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import routes from './routes';
-import { errorHandler, requestLogger, createRateLimiter } from './shared/middleware/errorHandler';
+import { errorHandler, requestLogger } from './shared/middleware/errorHandler';
 import { prisma } from './shared/config/database';
 import { ScheduleManager } from "./shared/services/scheduleManager";
+import { rateLimiterService } from './shared/services/rateLimiterService';
 
 // Load environment variables
 dotenv.config();
@@ -37,8 +38,8 @@ if (process.env.NODE_ENV === 'development') {
   app.use(requestLogger);
 }
 
-// Rate limiting
-app.use(createRateLimiter(10000, 15 * 60 * 1000)); // 10000 requests per 15 minutes
+// Dynamic rate limiting from database
+app.use(rateLimiterService.middleware());
 
 // API routes
 app.use('/api/v1', routes);
@@ -136,6 +137,10 @@ async function startServer() {
     const scheduleManager = ScheduleManager.getInstance();
     scheduleManager.startSchedules();
     console.log("📧 Email notification scheduler initialized");
+
+    // Start rate limiter cleanup
+    rateLimiterService.startCleanup();
+    console.log("🔒 Rate limiter initialized");
 
     // Start listening
     const server = app.listen(PORT, () => {

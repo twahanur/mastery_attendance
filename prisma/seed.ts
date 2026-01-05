@@ -258,13 +258,77 @@ async function main() {
       key: 'enable_api_rate_limiting',
       value: true,
       category: 'system',
-      description: 'Enable API rate limiting'
+      description: 'Enable or disable API rate limiting'
     },
     {
-      key: 'api_rate_limit_per_hour',
-      value: 1000,
+      key: 'api_rate_limit_max_requests',
+      value: 10000,
       category: 'system',
-      description: 'API requests allowed per hour per user'
+      description: 'Maximum API requests allowed per window'
+    },
+    {
+      key: 'api_rate_limit_window_minutes',
+      value: 15,
+      category: 'system',
+      description: 'Time window for rate limiting in minutes'
+    }
+  ];
+
+  // Password validation settings
+  const passwordSettings = [
+    {
+      key: 'password_min_length',
+      value: 8,
+      category: 'security',
+      description: 'Minimum password length required'
+    },
+    {
+      key: 'password_require_uppercase',
+      value: true,
+      category: 'security',
+      description: 'Require at least one uppercase letter'
+    },
+    {
+      key: 'password_require_lowercase',
+      value: true,
+      category: 'security',
+      description: 'Require at least one lowercase letter'
+    },
+    {
+      key: 'password_require_number',
+      value: true,
+      category: 'security',
+      description: 'Require at least one number'
+    },
+    {
+      key: 'password_require_special',
+      value: true,
+      category: 'security',
+      description: 'Require at least one special character'
+    },
+    {
+      key: 'password_special_characters',
+      value: '!@#$%^&*()_+-=[]{}|;:,.<>?',
+      category: 'security',
+      description: 'Allowed special characters for passwords'
+    },
+    {
+      key: 'username_min_length',
+      value: 3,
+      category: 'security',
+      description: 'Minimum username length'
+    },
+    {
+      key: 'username_max_length',
+      value: 30,
+      category: 'security',
+      description: 'Maximum username length'
+    },
+    {
+      key: 'username_allow_special',
+      value: false,
+      category: 'security',
+      description: 'Allow special characters in usernames'
     }
   ];
 
@@ -308,13 +372,21 @@ async function main() {
     ...workingHoursSettings,
     ...emailSettings,
     ...systemSettings,
+    ...passwordSettings,
     ...reportSettings
   ];
 
-  // Create admin settings
+  // Create admin settings (using upsert to avoid duplicates)
   for (const setting of allSettings) {
-    await prisma.adminSettings.create({
-      data: {
+    await prisma.adminSettings.upsert({
+      where: { key: setting.key },
+      update: {
+        value: setting.value,
+        category: setting.category,
+        description: setting.description,
+        isActive: true
+      },
+      create: {
         key: setting.key,
         value: setting.value,
         category: setting.category,
