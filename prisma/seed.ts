@@ -198,43 +198,13 @@ async function main() {
     }
   ];
 
-  // System and security settings
+  // System settings (excluding password settings to avoid duplicates)
   const systemSettings = [
     {
       key: 'session_timeout',
       value: 8,
       category: 'system',
       description: 'User session timeout in hours'
-    },
-    {
-      key: 'password_min_length',
-      value: 8,
-      category: 'system',
-      description: 'Minimum password length'
-    },
-    {
-      key: 'password_require_uppercase',
-      value: true,
-      category: 'system',
-      description: 'Require uppercase letters in passwords'
-    },
-    {
-      key: 'password_require_lowercase',
-      value: true,
-      category: 'system',
-      description: 'Require lowercase letters in passwords'
-    },
-    {
-      key: 'password_require_numbers',
-      value: true,
-      category: 'system',
-      description: 'Require numbers in passwords'
-    },
-    {
-      key: 'password_require_symbols',
-      value: true,
-      category: 'system',
-      description: 'Require special symbols in passwords'
     },
     {
       key: 'max_login_attempts',
@@ -257,24 +227,24 @@ async function main() {
     {
       key: 'enable_api_rate_limiting',
       value: true,
-      category: 'system',
+      category: 'security',
       description: 'Enable or disable API rate limiting'
     },
     {
       key: 'api_rate_limit_max_requests',
       value: 10000,
-      category: 'system',
+      category: 'security',
       description: 'Maximum API requests allowed per window'
     },
     {
       key: 'api_rate_limit_window_minutes',
       value: 15,
-      category: 'system',
+      category: 'security',
       description: 'Time window for rate limiting in minutes'
     }
   ];
 
-  // Password validation settings
+  // Password validation settings (keys must match validationService expectations)
   const passwordSettings = [
     {
       key: 'password_min_length',
@@ -366,6 +336,119 @@ async function main() {
     }
   ];
 
+  // User management settings (used by UserSettingsService)
+  const userManagementSettings = [
+    {
+      key: 'user.passwordPolicy',
+      value: {
+        minLength: 8,
+        maxLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumbers: true,
+        requireSymbols: true,
+        preventCommonPasswords: true,
+        preventUserInfo: true,
+        expirationDays: 90,
+        historyCount: 5
+      },
+      category: 'user',
+      description: 'Password security requirements and policies'
+    },
+    {
+      key: 'user.registrationPolicy',
+      value: {
+        allowSelfRegistration: false,
+        requireEmailVerification: true,
+        requireAdminApproval: true,
+        allowedEmailDomains: [],
+        blockedEmailDomains: [],
+        defaultRole: 'EMPLOYEE',
+        autoActivateAccounts: false,
+        requireInvitation: true
+      },
+      category: 'user',
+      description: 'User registration and account creation policies'
+    },
+    {
+      key: 'user.lockoutRules',
+      value: {
+        enabled: true,
+        maxFailedAttempts: 5,
+        lockoutDurationMinutes: 30,
+        resetFailedAttemptsAfterMinutes: 60,
+        notifyAdminOnLockout: true,
+        allowSelfUnlock: false,
+        progressiveDelay: true
+      },
+      category: 'user',
+      description: 'Account lockout and security policies'
+    },
+    {
+      key: 'user.sessionSettings',
+      value: {
+        sessionTimeoutMinutes: 480,
+        allowMultipleSessions: true,
+        forceLogoutOnPasswordChange: true,
+        rememberMeDays: 30,
+        requireReauthForSensitive: true
+      },
+      category: 'user',
+      description: 'User session and authentication settings'
+    },
+    {
+      key: 'user.profileFields',
+      value: [
+        { fieldName: 'firstName', required: true, visible: true, editable: true, fieldType: 'text', validation: { minLength: 1, maxLength: 50 } },
+        { fieldName: 'lastName', required: true, visible: true, editable: true, fieldType: 'text', validation: { minLength: 1, maxLength: 50 } },
+        { fieldName: 'email', required: true, visible: true, editable: true, fieldType: 'email' },
+        { fieldName: 'phone', required: false, visible: true, editable: true, fieldType: 'phone' },
+        { fieldName: 'department', required: false, visible: true, editable: true, fieldType: 'select', validation: { options: ['HR', 'IT', 'Finance', 'Operations', 'Administration', 'Engineering'] } },
+        { fieldName: 'position', required: false, visible: true, editable: true, fieldType: 'text' },
+        { fieldName: 'startDate', required: false, visible: true, editable: true, fieldType: 'date' }
+      ],
+      category: 'user',
+      description: 'User profile field configuration and validation rules'
+    }
+  ];
+
+  // Email notification settings (used by EmailSettingsService)
+  const emailNotificationSettings = [
+    {
+      key: 'email.smtp',
+      value: {
+        host: process.env.SMTP_HOST || 'smtp.gmail.com',
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true',
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || '',
+        from: process.env.EMAIL_FROM || 'noreply@attendance.com'
+      },
+      category: 'email',
+      description: 'SMTP server configuration for email sending'
+    },
+    {
+      key: 'email.notifications',
+      value: {
+        timezone: 'Asia/Dhaka',
+        dailyReminder: {
+          enabled: true,
+          cronExpression: '0 13 * * 1-5'
+        },
+        weeklyReport: {
+          enabled: true,
+          cronExpression: '0 9 * * 1'
+        },
+        endOfDay: {
+          enabled: true,
+          cronExpression: '0 18 * * 1-5'
+        }
+      },
+      category: 'email',
+      description: 'Email notification scheduling configuration'
+    }
+  ];
+
   // Combine all settings
   const allSettings = [
     ...companySettings,
@@ -373,7 +456,9 @@ async function main() {
     ...emailSettings,
     ...systemSettings,
     ...passwordSettings,
-    ...reportSettings
+    ...reportSettings,
+    ...userManagementSettings,
+    ...emailNotificationSettings
   ];
 
   // Create admin settings (using upsert to avoid duplicates)

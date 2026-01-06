@@ -7,6 +7,7 @@ import { errorHandler, requestLogger } from './shared/middleware/errorHandler';
 import { prisma } from './shared/config/database';
 import { ScheduleManager } from "./shared/services/scheduleManager";
 import { rateLimiterService } from './shared/services/rateLimiterService';
+import { settingsInitializationService } from './shared/services/settingsInitializationService';
 
 // Load environment variables
 dotenv.config();
@@ -133,9 +134,13 @@ async function startServer() {
     // Connect to database
     await connectDatabase();
 
+    // Initialize admin settings (ensures all required settings exist)
+    await settingsInitializationService.initializeAllSettings();
+    console.log("⚙️ Admin settings initialized");
+
     // Initialize schedule manager for automated email notifications
     const scheduleManager = ScheduleManager.getInstance();
-    scheduleManager.startSchedules();
+    await scheduleManager.startSchedules();
     console.log("📧 Email notification scheduler initialized");
 
     // Start rate limiter cleanup

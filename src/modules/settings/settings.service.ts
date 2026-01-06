@@ -71,18 +71,31 @@ export class SettingsService {
 
   /**
    * Get a specific setting by key
+   * Returns the full setting object with value property for compatibility
    */
-  async getSetting(key: string): Promise<any> {
+  async getSetting(key: string): Promise<{ value: any } | null> {
     const setting = await prisma.adminSettings.findUnique({
       where: { key }
     });
 
     if (!setting || !setting.isActive) {
-      // Return default value if setting doesn't exist
-      return this.getDefaultValue(key);
+      // Return default value wrapped in object if it exists
+      const defaultValue = this.getDefaultValue(key);
+      if (defaultValue !== null) {
+        return { value: defaultValue };
+      }
+      return null;
     }
 
-    return setting.value;
+    return { value: setting.value };
+  }
+
+  /**
+   * Get raw setting value by key (for direct value access)
+   */
+  async getSettingValue(key: string): Promise<any> {
+    const setting = await this.getSetting(key);
+    return setting?.value ?? null;
   }
 
   /**
@@ -132,28 +145,40 @@ export class SettingsService {
   }
 
   /**
-   * Update an existing admin setting
+   * Update an existing admin setting (creates if it doesn't exist)
    */
   async updateSetting(key: string, data: UpdateSettingRequest): Promise<AdminSetting> {
+    // Validate new setting value
+    this.validateSettingValue(key, data.value);
+
     const existingSetting = await prisma.adminSettings.findUnique({
       where: { key }
     });
 
-    if (!existingSetting) {
-      throw new NotFoundError(`Setting with key '${key}' not found`);
+    let updatedSetting: AdminSetting;
+
+    if (existingSetting) {
+      updatedSetting = await prisma.adminSettings.update({
+        where: { key },
+        data: {
+          value: data.value,
+          description: data.description ?? existingSetting.description,
+          isActive: data.isActive ?? existingSetting.isActive
+        }
+      });
+    } else {
+      // Create the setting if it doesn't exist
+      const category = this.getCategoryForKey(key);
+      updatedSetting = await prisma.adminSettings.create({
+        data: {
+          key,
+          value: data.value,
+          category,
+          description: data.description || this.getDescriptionForKey(key),
+          isActive: data.isActive ?? true
+        }
+      });
     }
-
-    // Validate new setting value
-    this.validateSettingValue(key, data.value);
-
-    const updatedSetting = await prisma.adminSettings.update({
-      where: { key },
-      data: {
-        value: data.value,
-        description: data.description ?? existingSetting.description,
-        isActive: data.isActive ?? existingSetting.isActive
-      }
-    });
 
     // Trigger any side effects for this setting change
     await this.handleSettingChange(key, data.value);

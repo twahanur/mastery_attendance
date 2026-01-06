@@ -50,7 +50,8 @@ export class EmailSettingsService {
    * Get SMTP configuration
    */
   async getSMTPConfig(): Promise<SMTPConfig> {
-    const smtpConfig = await this.settingsService.getSetting('smtp_config');
+    const setting = await this.settingsService.getSetting('smtp_config');
+    const smtpConfig = setting?.value;
     
     return {
       host: smtpConfig?.host || process.env.SMTP_HOST || 'smtp.gmail.com',
@@ -125,7 +126,8 @@ export class EmailSettingsService {
    * Get email template
    */
   async getEmailTemplate(templateName: string): Promise<EmailTemplate> {
-    const template = await this.settingsService.getSetting(`email_template_${templateName}`);
+    const setting = await this.settingsService.getSetting(`email_template_${templateName}`);
+    const template = setting?.value;
     
     if (!template) {
       return this.getDefaultEmailTemplate(templateName);
@@ -186,7 +188,8 @@ export class EmailSettingsService {
    * Get notification schedule
    */
   async getNotificationSchedule(): Promise<NotificationSchedule> {
-    const schedule = await this.settingsService.getSetting('notification_schedule');
+    const setting = await this.settingsService.getSetting('notification_schedule');
+    const schedule = setting?.value;
     
     return {
       dailyReminderTime: schedule?.dailyReminderTime || '13:00',
@@ -223,7 +226,8 @@ export class EmailSettingsService {
    * Get email notification settings
    */
   async getEmailNotificationSettings(): Promise<EmailNotificationSettings> {
-    const settings = await this.settingsService.getSetting('email_notification_settings');
+    const setting = await this.settingsService.getSetting('email_notification_settings');
+    const settings = setting?.value;
     
     return {
       enabled: settings?.enabled !== false,

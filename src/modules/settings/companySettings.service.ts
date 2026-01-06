@@ -46,13 +46,13 @@ export class CompanySettingsService {
     ]);
 
     return {
-      name: name || 'Your Company Ltd.',
-      email: email || '',
-      phone: phone || '',
-      address: address || '',
-      timezone: timezone || 'Asia/Dhaka',
-      logo: logo || '',
-      website: website || ''
+      name: name?.value || 'Your Company Ltd.',
+      email: email?.value || '',
+      phone: phone?.value || '',
+      address: address?.value || '',
+      timezone: timezone?.value || 'Asia/Dhaka',
+      logo: logo?.value || '',
+      website: website?.value || ''
     };
   }
 
@@ -96,12 +96,13 @@ export class CompanySettingsService {
    */
   async getWorkingHours(): Promise<WorkingHours> {
     const workingHours = await this.settingsService.getSetting('working_hours');
+    const hours = workingHours?.value;
     
     return {
-      startTime: workingHours?.startTime || '09:00',
-      endTime: workingHours?.endTime || '18:00',
-      breakDuration: workingHours?.breakDuration || 60,
-      gracePeriod: workingHours?.gracePeriod || 15
+      startTime: hours?.startTime || '09:00',
+      endTime: hours?.endTime || '18:00',
+      breakDuration: hours?.breakDuration || 60,
+      gracePeriod: hours?.gracePeriod || 15
     };
   }
 
@@ -134,7 +135,7 @@ export class CompanySettingsService {
    */
   async getWorkingDays(): Promise<string[]> {
     const workingDays = await this.settingsService.getSetting('working_days');
-    return workingDays || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    return workingDays?.value || ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   }
 
   /**
@@ -158,7 +159,7 @@ export class CompanySettingsService {
    */
   async getHolidays(): Promise<string[]> {
     const holidays = await this.settingsService.getSetting('company_holidays');
-    return holidays || [];
+    return holidays?.value || [];
   }
 
   /**
