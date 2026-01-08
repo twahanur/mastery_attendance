@@ -92,7 +92,19 @@ export class AttendanceSchedulerService {
       });
 
       if (admin && admin.email) {
-        await emailService.sendDailyAbsenteeReport(admin.email, absentEmployees, date);
+        // Format absentee list for email
+        const absenteeListHtml = absentEmployees.length > 0 
+          ? `<ul>${absentEmployees.map(emp => 
+              `<li>${emp.firstName} ${emp.lastName} (${emp.employeeId}) - ${emp.department || 'N/A'}</li>`
+            ).join('')}</ul>`
+          : '<p>No absences recorded.</p>';
+        
+        await emailService.sendDailyAbsenteeReport(
+          admin.email, 
+          date, 
+          absentEmployees.length, 
+          absenteeListHtml
+        );
         console.log(`Absentee report sent to admin: ${admin.email}`);
       }
     } catch (error) {
@@ -169,12 +181,131 @@ export class AttendanceSchedulerService {
       });
 
       if (admin && admin.email) {
-        await emailService.sendWeeklyReport(admin.email, reportData);
+        await emailService.sendWeeklyReport(
+          admin.email,
+          reportData.weekStart,
+          reportData.weekEnd,
+          {
+            totalPresent: reportData.totalAttendances,
+            totalAbsent: (reportData.totalEmployees * 7) - reportData.totalAttendances,
+            totalLate: 0, // Can be calculated if needed
+            attendanceRate: reportData.averageAttendance
+          },
+          `<p>Perfect attendance: ${reportData.perfectAttendance} employees</p>`
+        );
         console.log(`Weekly report sent to admin: ${admin.email}`);
       }
 
     } catch (error) {
       console.error('Error in sendWeeklyAttendanceSummary:', error);
+    }
+  }
+
+  /**
+   * Send end of day attendance report
+   */
+  async sendEndOfDayReport(): Promise<void> {
+    try {
+      console.log('Generating end-of-day attendance report...');
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const dateString = today.toISOString().split('T')[0];
+
+      // Get all active employees
+      const totalEmployees = await prisma.user.count({
+        where: {
+          role: Role.EMPLOYEE,
+          isActive: true
+        }
+      });
+
+      // Get today's attendances
+      const todayAttendances = await prisma.attendance.findMany({
+        where: {
+          date: today
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true,
+              employeeId: true,
+              department: true,
+              section: true
+            }
+          }
+        }
+      });
+
+      // Get employees who haven't checked out yet
+      const notCheckedOut = todayAttendances.filter(att => !att.checkOutTime);
+
+      // Calculate mood distribution
+      const moodDistribution = todayAttendances.reduce((acc, att) => {
+        acc[att.mood] = (acc[att.mood] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      // Calculate shift distribution
+      const shiftDistribution = todayAttendances.reduce((acc, att) => {
+        acc[att.shift] = (acc[att.shift] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const reportData = {
+        date: dateString,
+        totalEmployees,
+        presentCount: todayAttendances.length,
+        absentCount: totalEmployees - todayAttendances.length,
+        attendanceRate: totalEmployees > 0 
+          ? Math.round((todayAttendances.length / totalEmployees) * 100) 
+          : 0,
+        notCheckedOutCount: notCheckedOut.length,
+        moodDistribution,
+        shiftDistribution,
+        notCheckedOut: notCheckedOut.map(att => ({
+          name: `${att.user.firstName || ''} ${att.user.lastName || ''}`.trim(),
+          employeeId: att.employeeId,
+          department: att.user.department,
+          checkInTime: att.checkInTime?.toISOString()
+        }))
+      };
+
+      // Send to admin
+      const admin = await prisma.user.findFirst({
+        where: {
+          role: Role.ADMIN,
+          isActive: true
+        },
+        select: {
+          email: true
+        }
+      });
+
+      if (admin && admin.email) {
+        // Build department breakdown HTML
+        const departmentBreakdownHtml = Object.entries(shiftDistribution)
+          .map(([shift, count]) => `<p><strong>${shift}:</strong> ${count} employees</p>`)
+          .join('');
+        
+        await emailService.sendEndOfDayReport(
+          admin.email,
+          reportData.date,
+          {
+            totalPresent: reportData.presentCount,
+            totalAbsent: reportData.absentCount,
+            totalLate: 0, // Can be calculated if needed
+            totalEarlyLeave: 0 // Can be calculated if needed
+          },
+          departmentBreakdownHtml + 
+            `<p><strong>Not checked out:</strong> ${reportData.notCheckedOutCount}</p>`
+        );
+        console.log(`End-of-day report sent to admin: ${admin.email}`);
+      }
+
+    } catch (error) {
+      console.error('Error in sendEndOfDayReport:', error);
     }
   }
 }

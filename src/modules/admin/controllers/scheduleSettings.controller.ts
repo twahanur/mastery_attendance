@@ -224,6 +224,27 @@ export class ScheduleSettingsController {
       });
     }
   };
+
+  /**
+   * Manually trigger a scheduled job (admin testing)
+   */
+  triggerJob = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { jobName } = req.params as { jobName: 'dailyReminder' | 'weeklyReport' | 'endOfDay' };
+      const valid = ['dailyReminder', 'weeklyReport', 'endOfDay'];
+      if (!valid.includes(jobName)) {
+        res.status(400).json({ success: false, message: `Invalid jobName. Use one of: ${valid.join(', ')}` });
+        return;
+      }
+
+      const scheduleManager = ScheduleManager.getInstance();
+      const result = await scheduleManager.triggerJob(jobName);
+
+      res.json({ success: result.success, message: result.message });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Failed to trigger job' });
+    }
+  };
 }
 
 export const scheduleSettingsController = new ScheduleSettingsController();

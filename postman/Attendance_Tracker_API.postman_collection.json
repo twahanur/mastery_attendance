@@ -1,0 +1,2019 @@
+{
+  "info": {
+    "_postman_id": "attendance-tracker-api-v2",
+    "name": "Attendance Tracker API",
+    "description": "Complete API collection for Attendance Tracker system with all endpoints for authentication, attendance, users, reports, and admin settings",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@company.com\",\n  \"password\": \"Password@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@company.com\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Verify Reset Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"abc123def456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-reset-token",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "verify-reset-token"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"abc123def456\",\n  \"newPassword\": \"NewPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "reset-password"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"phoneNumber\": \"+880-1700-000002\",\n  \"address\": \"New Address, Dhaka\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/profile",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "profile"]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"OldPassword@123\",\n  \"newPassword\": \"NewPassword@456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        },
+        {
+          "name": "Create Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@company.com\",\n  \"username\": \"newuser\",\n  \"password\": \"Password@123\",\n  \"firstName\": \"New\",\n  \"lastName\": \"User\",\n  \"employeeId\": \"EMP100\",\n  \"section\": \"Development\",\n  \"department\": \"IT\",\n  \"designation\": \"Junior Developer\",\n  \"phoneNumber\": \"+880-1700-000100\",\n  \"address\": \"Dhaka, Bangladesh\",\n  \"dateOfJoining\": \"2026-01-08\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "employees"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Attendance Management",
+      "item": [
+        {
+          "name": "Mark Attendance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mood\": \"HAPPY\",\n  \"date\": \"2026-01-08\",\n  \"notes\": \"Working from office today\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/mark",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "mark"]
+            }
+          }
+        },
+        {
+          "name": "Mark Absence",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"date\": \"2026-01-08\",\n  \"reason\": \"Sick leave - fever\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/absent",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "absent"]
+            }
+          }
+        },
+        {
+          "name": "Update Attendance (Check-out)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"checkOutTime\": \"2026-01-08T18:00:00.000Z\",\n  \"notes\": \"Completed all tasks\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/attendance/:attendanceId",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", ":attendanceId"]
+            }
+          }
+        },
+        {
+          "name": "Get My Attendance Records",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/my-records?page=1&limit=10&startDate=2026-01-01&endDate=2026-01-31&mood=HAPPY&shift=MORNING",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "my-records"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31"
+                },
+                {
+                  "key": "mood",
+                  "value": "HAPPY"
+                },
+                {
+                  "key": "shift",
+                  "value": "MORNING"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Current Month Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/current-month-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "current-month-summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Month Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/month-summary?month=1&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "month-summary"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "1"
+                },
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Check Today's Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/today",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "today"]
+            }
+          }
+        },
+        {
+          "name": "Check Date Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/date/2026-01-07",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "date", "2026-01-07"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/stats",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance Chart Data",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/chart?period=month",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "chart"],
+              "query": [
+                {
+                  "key": "period",
+                  "value": "month"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Attendance",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/attendance/date/2026-01-08",
+              "host": ["{{baseUrl}}"],
+              "path": ["attendance", "date", "2026-01-08"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. User Management",
+      "item": [
+        {
+          "name": "Get All Employees",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees?page=1&limit=10&search=&department=IT&section=Development&isActive=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "department",
+                  "value": "IT"
+                },
+                {
+                  "key": "section",
+                  "value": "Development"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Employee by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Employee",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"section\": \"QA\",\n  \"department\": \"IT\",\n  \"designation\": \"Senior Engineer\",\n  \"phoneNumber\": \"+880-1700-000002\",\n  \"address\": \"New Address\",\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}/deactivate",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}", "deactivate"]
+            }
+          }
+        },
+        {
+          "name": "Activate Employee",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}/activate",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}", "activate"]
+            }
+          }
+        },
+        {
+          "name": "Delete Employee",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/employees/{{employeeId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "employees", "{{employeeId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Get Departments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/departments",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "departments"]
+            }
+          }
+        },
+        {
+          "name": "Get Sections",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/sections",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "sections"]
+            }
+          }
+        },
+        {
+          "name": "Get Employee Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/statistics",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "statistics"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reports",
+      "item": [
+        {
+          "name": "Get Daily Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/daily?date=2026-01-08",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "daily"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-01-08"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Daily Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/daily/pdf?date=2026-01-08",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "daily", "pdf"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "2026-01-08"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Weekly Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/weekly?startDate=2026-01-06&endDate=2026-01-10",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "weekly"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-01-06"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Weekly Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/weekly/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "weekly", "pdf"]
+            }
+          }
+        },
+        {
+          "name": "Get Monthly Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/monthly?month=1&year=2026",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "monthly"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "1"
+                },
+                {
+                  "key": "year",
+                  "value": "2026"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Monthly Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/monthly/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "monthly", "pdf"]
+            }
+          }
+        },
+        {
+          "name": "Get Employee Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}?startDate=2026-01-01&endDate=2026-01-31",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Employee Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/employee/{{employeeId}}/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "employee", "{{employeeId}}", "pdf"]
+            }
+          }
+        },
+        {
+          "name": "Get Department Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/department?startDate=2026-01-01&endDate=2026-01-31&department=IT",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "department"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31"
+                },
+                {
+                  "key": "department",
+                  "value": "IT"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Download Department Report PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/department/pdf",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "department", "pdf"]
+            }
+          }
+        },
+        {
+          "name": "Get Attendance Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "summary"]
+            }
+          }
+        },
+        {
+          "name": "Get Day-wise Attendance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reports/day-wise?startDate=2026-01-01&endDate=2026-01-31&limit=30",
+              "host": ["{{baseUrl}}"],
+              "path": ["reports", "day-wise"],
+              "query": [
+                {
+                  "key": "startDate",
+                  "value": "2026-01-01"
+                },
+                {
+                  "key": "endDate",
+                  "value": "2026-01-31"
+                },
+                {
+                  "key": "limit",
+                  "value": "30"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Admin Settings",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "settings", "all"]
+            }
+          }
+        },
+        {
+          "name": "Get Settings by Category",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings/category/company",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "settings", "category", "company"]
+            }
+          }
+        },
+        {
+          "name": "Get Dashboard Overview",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "settings", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Initialize Default Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/settings/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "settings", "initialize"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Security Settings",
+      "item": [
+        {
+          "name": "Get Password Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/password-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "password-rules"]
+            }
+          }
+        },
+        {
+          "name": "Update Password Rules",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minLength\": 10,\n  \"requireUppercase\": true,\n  \"requireLowercase\": true,\n  \"requireNumbers\": true,\n  \"requireSymbols\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/password-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "password-rules"]
+            }
+          }
+        },
+        {
+          "name": "Get Username Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/username-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "username-rules"]
+            }
+          }
+        },
+        {
+          "name": "Update Username Rules",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minLength\": 5,\n  \"maxLength\": 25,\n  \"allowSpecialCharacters\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/username-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "username-rules"]
+            }
+          }
+        },
+        {
+          "name": "Get Rate Limit Config",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/rate-limit",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "rate-limit"]
+            }
+          }
+        },
+        {
+          "name": "Update Rate Limit Config",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true,\n  \"maxRequests\": 5000,\n  \"windowMinutes\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/rate-limit",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "rate-limit"]
+            }
+          }
+        },
+        {
+          "name": "Get All Security Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/security-settings/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "security-settings", "all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Email Settings",
+      "item": [
+        {
+          "name": "Get SMTP Configuration",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/smtp",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "smtp"]
+            }
+          }
+        },
+        {
+          "name": "Update SMTP Configuration",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"host\": \"smtp.gmail.com\",\n  \"port\": 587,\n  \"secure\": false,\n  \"user\": \"noreply@company.com\",\n  \"pass\": \"your-app-password\",\n  \"from\": \"Company <noreply@company.com>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/smtp",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "smtp"]
+            }
+          }
+        },
+        {
+          "name": "Test SMTP Connection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/smtp/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "smtp", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get Notification Schedule",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/schedule",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Update Notification Schedule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"Asia/Dhaka\",\n  \"dailyReminder\": {\n    \"enabled\": true,\n    \"cronExpression\": \"0 14 * * 1-5\"\n  },\n  \"weeklyReport\": {\n    \"enabled\": true,\n    \"cronExpression\": \"0 10 * * 1\"\n  },\n  \"endOfDay\": {\n    \"enabled\": true,\n    \"cronExpression\": \"0 19 * * 1-5\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/schedule",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "schedule"]
+            }
+          }
+        },
+        {
+          "name": "Get All Email Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/templates",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "templates"]
+            }
+          }
+        },
+        {
+          "name": "Get Specific Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/templates/attendanceReminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "templates", "attendanceReminder"]
+            }
+          }
+        },
+        {
+          "name": "Update Email Template",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"⏰ Please Mark Attendance - {{date}}\",\n  \"body\": \"<div style='font-family: Arial;'><h2>Hello {{employeeName}}</h2><p>Please mark your attendance for {{date}}.</p></div>\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/templates/attendanceReminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "templates", "attendanceReminder"]
+            }
+          }
+        },
+        {
+          "name": "Delete Email Template",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/templates/attendanceReminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "templates", "attendanceReminder"]
+            }
+          }
+        },
+        {
+          "name": "Initialize Default Templates",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/templates/init-defaults",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "templates", "init-defaults"]
+            }
+          }
+        },
+        {
+          "name": "Send Test Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"to\": \"test@example.com\",\n  \"templateType\": \"attendanceReminder\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/test",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "test"]
+            }
+          }
+        },
+        {
+          "name": "Get All Email Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/email-settings/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "email-settings", "all"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. User Settings",
+      "item": [
+        {
+          "name": "Get Password Policy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/password-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "password-policy"]
+            }
+          }
+        },
+        {
+          "name": "Update Password Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"minLength\": 10,\n  \"expirationDays\": 60,\n  \"historyCount\": 3\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/password-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "password-policy"]
+            }
+          }
+        },
+        {
+          "name": "Validate Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"TestPassword@123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/password-policy/validate",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "password-policy", "validate"]
+            }
+          }
+        },
+        {
+          "name": "Get Registration Policy",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/registration-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "registration-policy"]
+            }
+          }
+        },
+        {
+          "name": "Update Registration Policy",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allowSelfRegistration\": true,\n  \"requireEmailVerification\": true,\n  \"allowedEmailDomains\": [\"company.com\"]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/registration-policy",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "registration-policy"]
+            }
+          }
+        },
+        {
+          "name": "Get Lockout Rules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/lockout-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "lockout-rules"]
+            }
+          }
+        },
+        {
+          "name": "Update Lockout Rules",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maxFailedAttempts\": 3,\n  \"lockoutDurationMinutes\": 60\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/lockout-rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "lockout-rules"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile Fields",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/profile-fields",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "profile-fields"]
+            }
+          }
+        },
+        {
+          "name": "Update Profile Fields",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fields\": [\n    {\n      \"fieldName\": \"phoneNumber\",\n      \"required\": true,\n      \"visible\": true,\n      \"editable\": true,\n      \"fieldType\": \"phone\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/profile-fields",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "profile-fields"]
+            }
+          }
+        },
+        {
+          "name": "Get Session Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/session-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "session-settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Session Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionTimeoutMinutes\": 240,\n  \"allowMultipleSessions\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/session-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "session-settings"]
+            }
+          }
+        },
+        {
+          "name": "Get All User Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/all",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "all"]
+            }
+          }
+        },
+        {
+          "name": "Reset User Settings to Defaults",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/user-settings/reset",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "user-settings", "reset"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Schedule Settings",
+      "item": [
+        {
+          "name": "Get Schedule Status",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "status"]
+            }
+          }
+        },
+        {
+          "name": "Start Schedules",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "start"]
+            }
+          }
+        },
+        {
+          "name": "Stop Schedules",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/stop",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "stop"]
+            }
+          }
+        },
+        {
+          "name": "Reload Schedules",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/reload",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "reload"]
+            }
+          }
+        },
+        {
+          "name": "Update Schedule Settings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timezone\": \"Asia/Dhaka\",\n  \"dailyReminder\": {\n    \"enabled\": true,\n    \"cronExpression\": \"0 14 * * 1-5\"\n  },\n  \"weeklyReport\": {\n    \"enabled\": true,\n    \"cronExpression\": \"0 10 * * 1\"\n  },\n  \"endOfDay\": {\n    \"enabled\": false,\n    \"cronExpression\": \"0 18 * * 1-5\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "settings"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Schedule",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/schedule-settings/toggle/dailyReminder",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "schedule-settings", "toggle", "dailyReminder"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Settings Management",
+      "item": [
+        {
+          "name": "Get All Settings",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings?category=company&isActive=true",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "company"
+                },
+                {
+                  "key": "isActive",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Setting by Key",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings/company_name",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "company_name"]
+            }
+          }
+        },
+        {
+          "name": "Create Setting",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"key\": \"custom_setting\",\n  \"value\": \"Custom Value\",\n  \"category\": \"custom\",\n  \"description\": \"A custom setting\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings"]
+            }
+          }
+        },
+        {
+          "name": "Update Setting",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"New Value\",\n  \"description\": \"Updated description\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/company_name",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "company_name"]
+            }
+          }
+        },
+        {
+          "name": "Upsert Setting",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": \"Value\",\n  \"category\": \"custom\",\n  \"description\": \"Create or update\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/company_name/upsert",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "company_name", "upsert"]
+            }
+          }
+        },
+        {
+          "name": "Delete Setting",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings/company_name",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "company_name"]
+            }
+          }
+        },
+        {
+          "name": "Bulk Update Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"settings\": [\n    { \"key\": \"company_name\", \"value\": \"New Company Name\" },\n    { \"key\": \"timezone\", \"value\": \"Asia/Kolkata\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/settings/bulk",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "bulk"]
+            }
+          }
+        },
+        {
+          "name": "Initialize Default Settings",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/settings/initialize",
+              "host": ["{{baseUrl}}"],
+              "path": ["settings", "initialize"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "attendanceId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

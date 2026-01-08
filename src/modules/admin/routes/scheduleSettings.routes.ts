@@ -20,4 +20,7 @@ router.post('/reload', scheduleSettingsController.reloadSchedules);
 router.put('/settings', scheduleSettingsController.updateScheduleSettings);
 router.put('/toggle/:scheduleType', scheduleSettingsController.toggleSchedule);
 
+// Manual trigger for testing
+router.post('/trigger/:jobName', scheduleSettingsController.triggerJob);
+
 export default router;

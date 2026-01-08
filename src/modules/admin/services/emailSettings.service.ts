@@ -87,10 +87,11 @@ export class EmailSettingsService {
     const settings = await this.settingsService.getSettingsByCategory('email');
     const templates: Record<string, EmailTemplate> = {};
 
-    settings.forEach(setting => {
-      if (setting.key.startsWith('email.templates.')) {
-        const templateType = setting.key.replace('email.templates.', '');
-        templates[templateType] = setting.value;
+    // getSettingsByCategory returns an object with key-value pairs
+    Object.entries(settings).forEach(([key, value]) => {
+      if (key.startsWith('email.templates.')) {
+        const templateType = key.replace('email.templates.', '');
+        templates[templateType] = value;
       }
     });
 
