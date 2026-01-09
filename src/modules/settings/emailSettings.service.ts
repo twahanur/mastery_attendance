@@ -166,13 +166,13 @@ export class EmailSettingsService {
    */
   async getAllEmailTemplates(): Promise<Record<string, EmailTemplate>> {
     const templateNames = [
-      'attendance_reminder',
-      'daily_absentee_report',
-      'weekly_report',
-      'welcome_employee',
-      'password_reset',
-      'account_activation',
-      'system_notification'
+      'attendanceReminder',
+      'dailyAbsenteeReport',
+      'weeklyReport',
+      'welcomeEmployee',
+      'passwordReset',
+      'accountActivation',
+      'systemNotification'
     ];
 
     const templates: Record<string, EmailTemplate> = {};
@@ -337,11 +337,11 @@ export class EmailSettingsService {
 
     // Initialize default templates
     const templateDefaults = [
-      'attendance_reminder',
-      'daily_absentee_report',
-      'weekly_report',
-      'welcome_employee',
-      'password_reset'
+      'attendanceReminder',
+      'dailyAbsenteeReport',
+      'weeklyReport',
+      'welcomeEmployee',
+      'passwordReset'
     ];
 
     for (const templateName of templateDefaults) {
@@ -453,7 +453,7 @@ export class EmailSettingsService {
 
   private getDefaultEmailTemplate(templateName: string): EmailTemplate {
     const templates: Record<string, EmailTemplate> = {
-      attendance_reminder: {
+      attendanceReminder: {
         subject: '🕐 Attendance Reminder - Please Mark Your Attendance',
         htmlBody: `
           <!DOCTYPE html>
@@ -491,7 +491,7 @@ export class EmailSettingsService {
         variables: ['employeeName', 'employeeId', 'currentTime', 'attendanceUrl']
       },
 
-      daily_absentee_report: {
+      dailyAbsenteeReport: {
         subject: '📊 Daily Absentee Report - {{date}}',
         htmlBody: `
           <h2>Daily Absentee Report</h2>
@@ -504,7 +504,7 @@ export class EmailSettingsService {
         variables: ['date', 'totalEmployees', 'absentCount', 'absenteeList']
       },
 
-      weekly_report: {
+      weeklyReport: {
         subject: '📈 Weekly Attendance Report - Week of {{weekStart}}',
         htmlBody: `
           <h2>Weekly Attendance Report</h2>
@@ -516,7 +516,7 @@ export class EmailSettingsService {
         variables: ['weekStart', 'weekEnd', 'averageAttendance', 'reportDetails']
       },
 
-      welcome_employee: {
+      welcomeEmployee: {
         subject: '👋 Welcome to {{companyName}} - Your Account is Ready',
         htmlBody: `
           <h2>Welcome to {{companyName}}!</h2>
@@ -530,7 +530,7 @@ export class EmailSettingsService {
         variables: ['companyName', 'employeeName', 'employeeId', 'email']
       },
 
-      password_reset: {
+      passwordReset: {
         subject: '🔒 Password Reset Request - {{companyName}}',
         htmlBody: `
           <h2>Password Reset Request</h2>

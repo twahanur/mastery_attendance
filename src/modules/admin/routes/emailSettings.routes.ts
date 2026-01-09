@@ -29,6 +29,9 @@ router.post('/templates/init-defaults', emailSettingsController.initializeDefaul
 // Test Email
 router.post('/test', emailSettingsController.sendTestEmail);
 
+// Manual email sending (template or custom)
+router.post('/send', emailSettingsController.sendManualEmail);
+
 // Get all email settings at once
 router.get('/all', emailSettingsController.getAllEmailSettings);
 

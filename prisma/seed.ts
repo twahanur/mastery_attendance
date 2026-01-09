@@ -531,6 +531,15 @@ async function main() {
       description: 'Email template for daily attendance reminders'
     },
     {
+      key: 'email.templates.custom',
+      value: {
+        subject: '{{customSubject}}',
+        body: '<div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto;"><div style="padding: 16px 0; text-align: center;"><h2 style="margin: 0; color: #333;">{{companyName}}</h2><p style="margin: 4px 0; color: #666;">Hello {{employeeName}},</p></div><div style="padding: 20px; background: #f9f9f9; border-radius: 8px;">{{customBody}}</div><div style="padding: 12px 0; text-align: center; color: #999; font-size: 12px;">Need help? Contact <a href="mailto:{{supportEmail}}" style="color: #2563eb;">{{supportEmail}}</a></div></div>'
+      },
+      category: 'email',
+      description: 'Base wrapper for manually sent custom emails'
+    },
+    {
       key: 'email.templates.weeklyReport',
       value: {
         subject: '📊 Weekly Attendance Report - {{weekStart}} to {{weekEnd}}',
@@ -670,7 +679,7 @@ async function main() {
   console.log('👑 Creating admin user...');
   const admin = await prisma.user.create({
     data: {
-      email: 'admin@company.com',
+      email: 'thohanur141@gmail.com',
       username: 'admin',
       password: hashedPassword,
       firstName: 'System',

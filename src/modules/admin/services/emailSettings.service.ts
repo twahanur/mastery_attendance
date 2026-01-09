@@ -1,4 +1,6 @@
 import { SettingsService } from '../../settings/settings.service';
+import { prisma } from '../../../shared/config/database';
+import { getCurrentMonthRange } from '../../../shared/utils/dateUtils';
 
 interface SMTPConfig {
   host: string;
@@ -196,6 +198,22 @@ export class EmailSettingsService {
           </div>
         `,
         text: 'Weekly Attendance Report: {{weekStartDate}} to {{weekEndDate}}. Average: {{averageAttendance}}%'
+      },
+      custom: {
+        subject: '{{customSubject}}',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto;">
+            <div style="padding: 16px 0; text-align: center;">
+              <h2 style="margin: 0; color: #333;">{{companyName}}</h2>
+              <p style="margin: 4px 0; color: #666;">Hello {{employeeName}},</p>
+            </div>
+            <div style="padding: 20px; background: #f9f9f9; border-radius: 8px;">{{customBody}}</div>
+            <div style="padding: 12px 0; text-align: center; color: #999; font-size: 12px;">
+              Need help? Contact <a href="mailto:{{supportEmail}}" style="color: #2563eb;">{{supportEmail}}</a>
+            </div>
+          </div>
+        `,
+        text: 'Hello {{employeeName}}, {{customPlainText}}'
       }
     };
 
@@ -204,6 +222,129 @@ export class EmailSettingsService {
       if (!existingTemplate) {
         await this.updateTemplate(templateType, template);
       }
+    }
+  }
+
+  // Helper Methods for Auto-populating Template Variables
+  async getCompanySettings() {
+    try {
+      const setting = await this.settingsService.getSetting('company');
+      return setting?.value || { name: 'Mastery Attendance System' };
+    } catch {
+      return { name: 'Mastery Attendance System' };
+    }
+  }
+
+  async getWeeklyAttendanceStats(userId: string, weekStart: string, weekEnd: string) {
+    try {
+      const attendance = await prisma.attendance.findMany({
+        where: {
+          userId,
+          date: {
+            gte: new Date(weekStart),
+            lte: new Date(weekEnd)
+          }
+        }
+      });
+
+      // Determine status based on checkInTime presence
+      const totalPresent = attendance.filter(a => a.checkInTime).length;
+      const totalAbsent = attendance.filter(a => !a.checkInTime).length;
+      const totalLate = attendance.filter(a => a.checkInTime && a.notes?.includes('late')).length;
+      const totalDays = attendance.length || 1;
+      const attendanceRate = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
+
+      return {
+        totalPresent,
+        totalAbsent,
+        totalLate,
+        attendanceRate: `${attendanceRate}%`,
+        weekStart,
+        weekEnd
+      };
+    } catch (error) {
+      console.error('Error fetching weekly attendance stats:', error);
+      return null;
+    }
+  }
+
+  async getDailyAttendanceStats(date: string) {
+    try {
+      const startOfDay = new Date(date);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      const attendance = await prisma.attendance.findMany({
+        where: {
+          date: {
+            gte: startOfDay,
+            lte: endOfDay
+          }
+        },
+        include: {
+          user: {
+            select: {
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      });
+
+      // Determine status based on checkInTime presence
+      const totalPresent = attendance.filter(a => a.checkInTime).length;
+      const totalAbsent = attendance.filter(a => !a.checkInTime).length;
+      const totalLate = attendance.filter(a => a.checkInTime && a.notes?.includes('late')).length;
+      const absentEmployees = attendance
+        .filter(a => !a.checkInTime)
+        .map(a => `${a.user.firstName} ${a.user.lastName}`.trim())
+        .join(', ');
+
+      return {
+        totalPresent,
+        totalAbsent,
+        totalLate,
+        absentCount: totalAbsent,
+        absenteesList: absentEmployees || 'None',
+        date
+      };
+    } catch (error) {
+      console.error('Error fetching daily attendance stats:', error);
+      return null;
+    }
+  }
+
+  async getMonthlyAttendanceStats(userId: string) {
+    try {
+      const { start, end } = getCurrentMonthRange();
+      
+      const attendance = await prisma.attendance.findMany({
+        where: {
+          userId,
+          date: {
+            gte: start,
+            lte: end
+          }
+        }
+      });
+
+      // Determine status based on checkInTime presence
+      const totalPresent = attendance.filter(a => a.checkInTime).length;
+      const totalAbsent = attendance.filter(a => !a.checkInTime).length;
+      const totalLate = attendance.filter(a => a.checkInTime && a.notes?.includes('late')).length;
+      const totalDays = attendance.length || 1;
+      const attendanceRate = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
+
+      return {
+        totalPresent,
+        totalAbsent,
+        totalLate,
+        attendanceRate: `${attendanceRate}%`,
+        month: start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      };
+    } catch (error) {
+      console.error('Error fetching monthly attendance stats:', error);
+      return null;
     }
   }
 }

@@ -78,7 +78,7 @@ export const sendTestEmail = async (req: Request, res: Response): Promise<void> 
       message: 'Test email sent successfully',
       data: {
         recipient: email,
-        type: 'attendance_reminder',
+        type: 'attendanceReminder',
         sentAt: new Date().toISOString()
       }
     });

@@ -362,14 +362,14 @@ export class EmailSettingsController {
         res.status(400).json({
           success: false,
           message: 'Recipient email is required',
-          example: { recipientEmail: 'test@company.com', templateName: 'attendance_reminder' }
+          example: { recipientEmail: 'test@company.com', templateName: 'attendanceReminder' }
         });
         return;
       }
 
       // Get email configuration
       const smtpConfig = await this.emailSettingsService.getSMTPConfig();
-      const template = await this.emailSettingsService.getEmailTemplate(templateName || 'attendance_reminder');
+      const template = await this.emailSettingsService.getEmailTemplate(templateName || 'attendanceReminder');
 
       // Create test data
       const testData = {
@@ -419,7 +419,7 @@ export class EmailSettingsController {
         message: 'Test email sent successfully',
         data: {
           recipientEmail,
-          templateName: templateName || 'attendance_reminder',
+          templateName: templateName || 'attendanceReminder',
           executionTime: `${duration}ms`,
           timestamp: new Date().toISOString()
         }

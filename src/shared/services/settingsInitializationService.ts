@@ -192,6 +192,16 @@ export class SettingsInitializationService {
         },
         category: 'email',
         description: 'Email template for weekly attendance reports'
+      },
+      {
+        key: 'email.templates.custom',
+        value: {
+          subject: '{{customSubject}}',
+          html: '<div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto;"><div style="padding: 16px 0; text-align: center;"><h2 style="margin: 0; color: #333;">{{companyName}}</h2><p style="margin: 4px 0; color: #666;">Hello {{employeeName}},</p></div><div style="padding: 20px; background: #f9f9f9; border-radius: 8px;">{{customBody}}</div><div style="padding: 12px 0; text-align: center; color: #999; font-size: 12px;">Need help? Contact <a href="mailto:{{supportEmail}}" style="color: #2563eb;">{{supportEmail}}</a></div></div>',
+          text: 'Hello {{employeeName}}, {{customPlainText}}'
+        },
+        category: 'email',
+        description: 'Base wrapper for manually sent custom emails'
       }
     ];
 

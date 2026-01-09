@@ -13,7 +13,7 @@ import { settingsInitializationService } from './shared/services/settingsInitial
 dotenv.config();
 
 const app: Express = express();
-const PORT = process.env.PORT || 5000;
+const PORT =Number( process.env.PORT) || 5000;
 
 // Security middleware
 app.use(helmet({
@@ -148,7 +148,7 @@ async function startServer() {
     console.log("🔒 Rate limiter initialized");
 
     // Start listening
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, "0.0.0.0", () => {
       console.log(`
 🚀 Attendance Tracker API v2.0 is running!
 📍 Port: ${PORT}

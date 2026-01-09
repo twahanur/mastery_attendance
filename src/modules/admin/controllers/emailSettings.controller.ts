@@ -1,13 +1,16 @@
 import { Request, Response } from 'express';
 import { EmailSettingsService } from '../services/emailSettings.service';
 import { ScheduleManager } from '../../../shared/services/scheduleManager';
-import { emailService } from '../../../shared/services/emailService';
+import { EMAIL_TEMPLATE_TYPES, emailService } from '../../../shared/services/emailService';
+import { UserService } from '../../user/user.service';
 
 export class EmailSettingsController {
   private emailSettingsService: EmailSettingsService;
+  private userService: UserService;
 
   constructor() {
     this.emailSettingsService = new EmailSettingsService();
+    this.userService = new UserService();
   }
 
   /**
@@ -262,11 +265,143 @@ export class EmailSettingsController {
   };
 
   /**
+   * Manually send an email to a specific user
+   * Supports either a predefined template or a fully custom subject/body
+   */
+  sendManualEmail = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId, templateType, variables = {}, subject, html, text } = req.body || {};
+
+      if (!userId) {
+        res.status(400).json({ success: false, message: 'userId is required' });
+        return;
+      }
+
+      const user = await this.userService.getEmployeeById(userId);
+
+      if (!user.email) {
+        res.status(400).json({ success: false, message: 'User does not have a valid email' });
+        return;
+      }
+
+      const employeeName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User';
+
+      if (!templateType) {
+        res.status(400).json({ success: false, message: 'templateType is required (custom or any defined template key)' });
+        return;
+      }
+
+      // Normalize template type to camelCase (handle both camelCase and lowercase inputs)
+      const normalizedType = String(templateType);
+      const templateExists = Object.prototype.hasOwnProperty.call(EMAIL_TEMPLATE_TYPES, normalizedType);
+
+      if (!templateExists) {
+        res.status(400).json({ success: false, message: `Unknown templateType '${templateType}'. Valid types: ${Object.keys(EMAIL_TEMPLATE_TYPES).join(', ')}` });
+        return;
+      }
+
+      if (normalizedType === 'custom') {
+        if (!subject || !html) {
+          res.status(400).json({ success: false, message: 'Custom emails require subject and html body' });
+          return;
+        }
+
+        try {
+          await emailService.sendEmail(
+            user.email,
+            'custom',
+            {
+              customSubject: subject,
+              customBody: html,
+              employeeName,
+              email: user.email,
+              ...variables,
+            },
+          );
+
+          res.json({ success: true, message: 'Custom email sent successfully' });
+        } catch (emailError: any) {
+          res.status(500).json({ success: false, message: emailError.message || 'Failed to send custom email' });
+        }
+        return;
+      }
+
+      // For non-custom templates, subject/html are ignored and template content is used
+      if (subject || html) {
+        res.status(400).json({ success: false, message: 'subject/html are only allowed when templateType is CUSTOM' });
+        return;
+      }
+
+      // Build final variables object - merge user-provided with auto-populated data
+      let finalVariables: Record<string, any> = {
+        employeeName,
+        email: user.email,
+        ...variables,
+      };
+
+      // Auto-populate missing variables based on template type
+      try {
+        if (normalizedType === 'weeklyReport') {
+          const weekStart = variables.weekStart || new Date().toISOString().split('T')[0];
+          const weekEnd = variables.weekEnd || new Date().toISOString().split('T')[0];
+          
+          const stats = await this.emailSettingsService.getWeeklyAttendanceStats(userId, weekStart, weekEnd);
+          if (stats) {
+            finalVariables = { ...finalVariables, ...stats };
+          }
+        } else if (normalizedType === 'absenteeReport' || normalizedType === 'endOfDay') {
+          const date = variables.date || new Date().toISOString().split('T')[0];
+          const stats = await this.emailSettingsService.getDailyAttendanceStats(date);
+          if (stats) {
+            finalVariables = { ...finalVariables, ...stats };
+          }
+        } else if (normalizedType === 'monthlyReport') {
+          const stats = await this.emailSettingsService.getMonthlyAttendanceStats(userId);
+          if (stats) {
+            finalVariables = { ...finalVariables, ...stats };
+          }
+        }
+
+        // Add company name if not provided
+        if (!finalVariables.companyName) {
+          const company = await this.emailSettingsService.getCompanySettings();
+          finalVariables.companyName = company.name;
+        }
+
+        await emailService.sendEmail(
+          user.email,
+          normalizedType as keyof typeof EMAIL_TEMPLATE_TYPES,
+          finalVariables,
+        );
+
+        res.json({
+          success: true,
+          message: 'Email sent successfully using template',
+          note: 'Missing variables were auto-populated from attendance records'
+        });
+      } catch (emailError: any) {
+        res.status(500).json({ success: false, message: emailError.message || 'Failed to send email' });
+      }
+    } catch (error: any) {
+      if (error?.name === 'NotFoundError') {
+        res.status(404).json({ success: false, message: error.message || 'User not found' });
+        return;
+      }
+
+      console.error('Error sending manual email:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to send email',
+      });
+    }
+  };
+
+  /**
    * Send a test email
    */
   sendTestEmail = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { to, templateType } = req.body;
+      const {email:to, templateType } = req.body;
 
       if (!to) {
         res.status(400).json({

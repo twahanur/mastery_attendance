@@ -6,31 +6,31 @@ import { prisma } from '../config/database';
 // ============================================================================
 export const EMAIL_TEMPLATE_TYPES = {
   // Attendance Related
-  ATTENDANCE_REMINDER: {
+  attendanceReminder: {
     key: 'email.templates.attendanceReminder',
     name: 'Daily Attendance Reminder',
     description: 'Sent to employees who haven\'t marked attendance',
     variables: ['employeeName', 'date', 'time', 'companyName', 'loginUrl'],
   },
-  ABSENTEE_REPORT: {
+  absenteeReport: {
     key: 'email.templates.absenteeReport',
     name: 'Daily Absentee Report',
     description: 'Sent to admin with list of absent employees',
     variables: ['date', 'totalAbsent', 'absenteeList', 'companyName', 'departmentSummary'],
   },
-  WEEKLY_REPORT: {
+  weeklyReport: {
     key: 'email.templates.weeklyReport',
     name: 'Weekly Attendance Report',
     description: 'Weekly summary sent to admin',
     variables: ['weekStart', 'weekEnd', 'totalPresent', 'totalAbsent', 'totalLate', 'attendanceRate', 'companyName', 'reportDetails'],
   },
-  END_OF_DAY_REPORT: {
+  endOfDayReport: {
     key: 'email.templates.endOfDayReport',
     name: 'End of Day Summary',
     description: 'Daily summary sent at end of work day',
     variables: ['date', 'totalPresent', 'totalAbsent', 'totalLate', 'totalEarlyLeave', 'companyName', 'departmentBreakdown'],
   },
-  MONTHLY_REPORT: {
+  monthlyReport: {
     key: 'email.templates.monthlyReport',
     name: 'Monthly Attendance Report',
     description: 'Monthly summary sent to admin',
@@ -38,25 +38,25 @@ export const EMAIL_TEMPLATE_TYPES = {
   },
 
   // User Account Related
-  WELCOME: {
+  welcome: {
     key: 'email.templates.welcome',
     name: 'Welcome Email',
     description: 'Sent when a new employee account is created',
     variables: ['employeeName', 'email', 'temporaryPassword', 'loginUrl', 'companyName'],
   },
-  PASSWORD_RESET: {
+  passwordReset: {
     key: 'email.templates.passwordReset',
     name: 'Password Reset',
     description: 'Sent when password reset is requested',
     variables: ['employeeName', 'resetLink', 'resetToken', 'expiryTime', 'companyName'],
   },
-  PASSWORD_CHANGED: {
+  passwordChanged: {
     key: 'email.templates.passwordChanged',
     name: 'Password Changed Confirmation',
     description: 'Sent after password is successfully changed',
     variables: ['employeeName', 'changeTime', 'companyName', 'supportEmail'],
   },
-  ACCOUNT_LOCKED: {
+  accountLocked: {
     key: 'email.templates.accountLocked',
     name: 'Account Locked',
     description: 'Sent when account is locked due to failed attempts',
@@ -64,23 +64,29 @@ export const EMAIL_TEMPLATE_TYPES = {
   },
 
   // Leave Related
-  LEAVE_REQUEST: {
+  leaveRequest: {
     key: 'email.templates.leaveRequest',
     name: 'Leave Request Notification',
     description: 'Sent to manager when leave is requested',
     variables: ['employeeName', 'leaveType', 'startDate', 'endDate', 'reason', 'approvalUrl', 'companyName'],
   },
-  LEAVE_APPROVED: {
+  leaveApproved: {
     key: 'email.templates.leaveApproved',
     name: 'Leave Approved',
     description: 'Sent when leave request is approved',
     variables: ['employeeName', 'leaveType', 'startDate', 'endDate', 'approvedBy', 'companyName'],
   },
-  LEAVE_REJECTED: {
+  leaveRejected: {
     key: 'email.templates.leaveRejected',
     name: 'Leave Rejected',
     description: 'Sent when leave request is rejected',
     variables: ['employeeName', 'leaveType', 'startDate', 'endDate', 'rejectedBy', 'rejectionReason', 'companyName'],
+  },
+  custom: {
+    key: 'email.templates.custom',
+    name: 'Custom Message',
+    description: 'Manually sent custom subject and body',
+    variables: ['customSubject', 'customBody', 'employeeName', 'companyName', 'supportEmail'],
   },
 } as const;
 
@@ -88,7 +94,7 @@ export const EMAIL_TEMPLATE_TYPES = {
 // DEFAULT TEMPLATES - Used as fallback when admin hasn't configured custom templates
 // ============================================================================
 const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
-  'email.templates.attendanceReminder': {
+  'email.templates.attendance_Reminder': {
     subject: '⏰ Attendance Reminder - {{date}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -116,7 +122,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.absenteeReport': {
+  'email.templates.absentee_Report': {
     subject: '📋 Daily Absentee Report - {{date}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -141,7 +147,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.weeklyReport': {
+  'email.templates.weekly_Report': {
     subject: '📊 Weekly Attendance Report - {{weekStart}} to {{weekEnd}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -179,7 +185,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.endOfDayReport': {
+  'email.templates.endOfDay_Report': {
     subject: '🌅 End of Day Summary - {{date}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -276,7 +282,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.passwordReset': {
+  'email.templates.password_Reset': {
     subject: '🔐 Password Reset Request - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -311,7 +317,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.passwordChanged': {
+  'email.templates.password_Changed': {
     subject: '✅ Password Changed Successfully - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -338,7 +344,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.accountLocked': {
+  'email.templates.account_Locked': {
     subject: '🔒 Account Locked - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -366,7 +372,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.leaveRequest': {
+  'email.templates.leave_Request': {
     subject: '📝 Leave Request from {{employeeName}} - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -394,7 +400,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.leaveApproved': {
+  'email.templates.leave_Approved': {
     subject: '✅ Leave Approved - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -419,7 +425,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
-  'email.templates.leaveRejected': {
+  'email.templates.leave_Rejected': {
     subject: '❌ Leave Request Rejected - {{companyName}}',
     body: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -445,6 +451,23 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
       </div>
     `,
   },
+  'email.templates.custom': {
+    subject: '{{customSubject}}',
+    body: `
+      <div style="font-family: Arial, sans-serif; max-width: 640px; margin: 0 auto;">
+        <div style="padding: 16px 0; text-align: center;">
+          <h2 style="margin: 0; color: #333;">{{companyName}}</h2>
+          <p style="margin: 4px 0; color: #666;">Hello {{employeeName}},</p>
+        </div>
+        <div style="padding: 20px; background: #f9f9f9; border-radius: 8px;">
+          {{customBody}}
+        </div>
+        <div style="padding: 12px 0; text-align: center; color: #999; font-size: 12px;">
+          Need help? Contact <a href="mailto:{{supportEmail}}" style="color: #2563eb;">{{supportEmail}}</a>
+        </div>
+      </div>
+    `,
+  },
 };
 
 // ============================================================================
@@ -463,14 +486,16 @@ class EmailService {
       const smtpEmailKey = await prisma.adminSettings.findFirst({
         where: { key: 'email.smtp', isActive: true },
       });
-
+    console.log("smtp email key", smtpEmailKey? smtpEmailKey.value : "not found")
       const smtpLegacyKey = !smtpEmailKey
         ? await prisma.adminSettings.findFirst({ where: { key: 'smtp_config', isActive: true } })
         : null;
+    console.log("smtp legacy key", smtpLegacyKey? smtpLegacyKey.value : "not found")
 
       if ((smtpEmailKey && smtpEmailKey.value) || (smtpLegacyKey && smtpLegacyKey.value)) {
         const raw = (smtpEmailKey?.value ?? smtpLegacyKey?.value) as any;
         const config = typeof raw === 'string' ? JSON.parse(raw) : raw;
+        console.log(config)
         this.transporter = nodemailer.createTransport({
           host: config.host,
           port: Number(config.port) || 587,
@@ -571,6 +596,32 @@ class EmailService {
     return processed;
   }
 
+  // Parse SMTP error for user-friendly message
+  private parseSMTPError(error: any): string {
+    const errorMessage = error.message || error.toString();
+    
+    if (errorMessage.includes('Daily user sending limit exceeded')) {
+      return 'Gmail daily sending limit exceeded. Please try again tomorrow or upgrade your Gmail account.';
+    }
+    if (errorMessage.includes('535') || errorMessage.includes('authentication failed')) {
+      return 'SMTP authentication failed. Please check your email credentials.';
+    }
+    if (errorMessage.includes('Invalid login')) {
+      return 'Invalid SMTP username or password.';
+    }
+    if (errorMessage.includes('Connection timeout')) {
+      return 'SMTP connection timeout. Please check your server settings.';
+    }
+    if (errorMessage.includes('ECONNREFUSED')) {
+      return 'Unable to connect to SMTP server. Please verify host and port.';
+    }
+    if (errorMessage.includes('Recipient address rejected')) {
+      return 'Invalid recipient email address.';
+    }
+    
+    return errorMessage;
+  }
+
   // Generic send email method
   async sendEmail(
     to: string,
@@ -599,9 +650,36 @@ class EmailService {
 
       console.log(`✅ Email sent: ${templateType} to ${to}`);
       return true;
-    } catch (error) {
+    } catch (error: any) {
+      const userMessage = this.parseSMTPError(error);
       console.error(`❌ Failed to send email ${templateType}:`, error);
-      return false;
+      throw new Error(`Email sending failed: ${userMessage}`);
+    }
+  }
+
+  // Send a fully custom email without using a predefined template
+  async sendCustomEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
+    try {
+      if (!this.transporter) {
+        await this.initializeTransporter();
+      }
+
+      const fromEmail = await this.getFromEmail();
+
+      await this.transporter?.sendMail({
+        from: fromEmail,
+        to,
+        subject,
+        html,
+        text,
+      });
+
+      console.log(`✅ Custom email sent to ${to}`);
+      return true;
+    } catch (error: any) {
+      const userMessage = this.parseSMTPError(error);
+      console.error('❌ Failed to send custom email:', error);
+      throw new Error(`Email sending failed: ${userMessage}`);
     }
   }
 
@@ -637,7 +715,7 @@ class EmailService {
     employeeName: string,
     date: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'ATTENDANCE_REMINDER', {
+    return this.sendEmail(email, 'attendanceReminder', {
       employeeName,
       date,
       time: new Date().toLocaleTimeString(),
@@ -652,7 +730,7 @@ class EmailService {
     absenteeList: string,
     departmentSummary: string = ''
   ): Promise<boolean> {
-    return this.sendEmail(adminEmail, 'ABSENTEE_REPORT', {
+    return this.sendEmail(adminEmail, 'absenteeReport', {
       date,
       totalAbsent: totalAbsent.toString(),
       absenteeList,
@@ -673,7 +751,7 @@ class EmailService {
     },
     reportDetails: string = ''
   ): Promise<boolean> {
-    return this.sendEmail(adminEmail, 'WEEKLY_REPORT', {
+    return this.sendEmail(adminEmail, 'weeklyReport', {
       weekStart,
       weekEnd,
       totalPresent: stats.totalPresent.toString(),
@@ -696,7 +774,7 @@ class EmailService {
     },
     departmentBreakdown: string = ''
   ): Promise<boolean> {
-    return this.sendEmail(adminEmail, 'END_OF_DAY_REPORT', {
+    return this.sendEmail(adminEmail, 'endOfDayReport', {
       date,
       totalPresent: stats.totalPresent.toString(),
       totalAbsent: stats.totalAbsent.toString(),
@@ -718,7 +796,7 @@ class EmailService {
     topPerformers: string = '',
     reportDetails: string = ''
   ): Promise<boolean> {
-    return this.sendEmail(adminEmail, 'MONTHLY_REPORT', {
+    return this.sendEmail(adminEmail, 'monthlyReport', {
       month,
       year,
       totalWorkingDays: stats.totalWorkingDays.toString(),
@@ -734,7 +812,7 @@ class EmailService {
     employeeName: string,
     temporaryPassword: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'WELCOME', {
+    return this.sendEmail(email, 'welcome', {
       employeeName,
       email,
       temporaryPassword,
@@ -749,7 +827,7 @@ class EmailService {
     resetLink: string,
     expiryTime: string = '1 hour'
   ): Promise<boolean> {
-    return this.sendEmail(email, 'PASSWORD_RESET', {
+    return this.sendEmail(email, 'passwordReset', {
       employeeName,
       resetToken,
       resetLink,
@@ -762,7 +840,7 @@ class EmailService {
     email: string,
     employeeName: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'PASSWORD_CHANGED', {
+    return this.sendEmail(email, 'passwordChanged', {
       employeeName,
       changeTime: new Date().toLocaleString(),
     });
@@ -774,7 +852,7 @@ class EmailService {
     employeeName: string,
     unlockTime: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'ACCOUNT_LOCKED', {
+    return this.sendEmail(email, 'accountLocked', {
       employeeName,
       lockTime: new Date().toLocaleString(),
       unlockTime,
@@ -791,7 +869,7 @@ class EmailService {
     reason: string,
     approvalUrl: string
   ): Promise<boolean> {
-    return this.sendEmail(managerEmail, 'LEAVE_REQUEST', {
+    return this.sendEmail(managerEmail, 'leaveRequest', {
       employeeName,
       leaveType,
       startDate,
@@ -810,7 +888,7 @@ class EmailService {
     endDate: string,
     approvedBy: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'LEAVE_APPROVED', {
+    return this.sendEmail(email, 'leaveApproved', {
       employeeName,
       leaveType,
       startDate,
@@ -829,7 +907,7 @@ class EmailService {
     rejectedBy: string,
     rejectionReason: string
   ): Promise<boolean> {
-    return this.sendEmail(email, 'LEAVE_REJECTED', {
+    return this.sendEmail(email, 'leaveRejected', {
       employeeName,
       leaveType,
       startDate,
@@ -877,7 +955,7 @@ class EmailService {
 
   // Send test email
   async sendTestEmail(to: string): Promise<boolean> {
-    return this.sendEmail(to, 'ATTENDANCE_REMINDER', {
+    return this.sendEmail(to, 'attendanceReminder', {
       employeeName: 'Test User',
       date: new Date().toLocaleDateString(),
       time: new Date().toLocaleTimeString(),

@@ -191,7 +191,7 @@ export const settingValidationSchemas: Record<string, Joi.Schema> = {
   attendance_policy: attendancePolicySchema,
 
   // Email Templates
-  email_template_attendance_reminder: emailTemplateSchema,
+  emailTemplateAttendanceReminder: emailTemplateSchema,
   email_template_welcome: emailTemplateSchema,
   email_template_password_reset: emailTemplateSchema,
 
@@ -322,7 +322,7 @@ export const predefinedSettings = {
   email: [
     'smtp_config',
     'notification_schedule',
-    'email_template_attendance_reminder',
+    'emailTemplateAttendanceReminder',
     'email_template_welcome',
     'email_template_password_reset'
   ],
